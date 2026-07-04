@@ -1,0 +1,25 @@
+{{- if .Values.llApi.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ll-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: ll-api
+    {{- include "ll-infra.labels" . | nindent 4 }}
+spec:
+  {{- with .Values.global.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.global.hosts.api }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ll-api
+                port:
+                  name: http
+{{- end }}

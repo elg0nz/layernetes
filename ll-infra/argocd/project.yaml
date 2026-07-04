@@ -1,0 +1,23 @@
+# ArgoCD AppProject for the Layernetes platform. Apply into the cluster that
+# runs ArgoCD:  kubectl apply -f ll-infra/argocd/
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: layernetes
+  namespace: argocd
+spec:
+  description: Layernetes platform (Gitea, ll-api, ll-operator, cloudflared)
+  sourceRepos:
+    - https://github.com/elg0nz/layernetes.git
+  destinations:
+    - namespace: layernetes
+      server: https://kubernetes.default.svc
+  # The chart carries cluster-scoped resources: the LLAgent CRD and
+  # ll-operator's ClusterRole/ClusterRoleBinding.
+  clusterResourceWhitelist:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding

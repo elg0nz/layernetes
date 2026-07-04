@@ -1,0 +1,37 @@
+# ArgoCD Application deploying the ll-infra chart (production values).
+# Secrets that must exist out-of-band before the first sync:
+#   - ll-cloudflared-token (key: token) in the layernetes namespace, unless
+#     cloudflared.token / cloudflared.existingSecret is overridden below.
+# Override giteaAdmin.password and actRunner.token for production via
+# spec.source.helm.valuesObject or a values file in a private repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: layernetes
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: layernetes
+  source:
+    repoURL: https://github.com/elg0nz/layernetes.git
+    targetRevision: main
+    path: ll-infra
+    helm:
+      valueFiles:
+        - values.yaml
+      # cloudflared reads its tunnel token from the ll-cloudflared-token
+      # Secret (see cloudflared.existingSecret in values.yaml).
+      valuesObject:
+        cloudflared:
+          existingSecret: ll-cloudflared-token
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: layernetes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

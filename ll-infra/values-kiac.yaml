@@ -1,0 +1,54 @@
+# kiac overlay — layer AFTER values-local.yaml:
+#
+#   helm upgrade layernetes ./ll-infra -n layernetes \
+#     -f ll-infra/values-local.yaml -f ll-infra/values-kiac.yaml
+#
+# On kiac, MetalLB gives the ingress controller a real external IP, so the
+# platform is reachable on port 80 without a port-forward — and, crucially,
+# the same hostnames resolve correctly from INSIDE the cluster (the CI
+# docker-in-docker daemon must pull/push the registry; *.127.0.0.1.sslip.io
+# would point it at its own loopback). Replace 192.168.64.200 with your
+# ingress controller's IP: kubectl -n ingress-nginx get svc.
+#
+# Nodes also need containerd configured to trust the plain-HTTP registry —
+# see hack/kiac-registry-trust.sh.
+
+global:
+  hosts:
+    gitea: gitea.192.168.64.200.sslip.io
+    api: api.192.168.64.200.sslip.io
+    agents: agents.192.168.64.200.sslip.io
+  urlPortSuffix: ""
+
+llApi:
+  llagentBaseImage: gitea.192.168.64.200.sslip.io/layernetes-admin/llagent-base:latest
+
+# Registry traffic from inside the cluster bypasses the ingress (large blob
+# transfers stall through it on local setups): the registry hostname resolves
+# to this pinned Service IP for the runner pod and (via /etc/hosts, see
+# hack/kiac-registry-trust.sh) for node containerd.
+registryDirect:
+  enabled: true
+  clusterIP: 10.96.100.100
+
+actRunner:
+  hostAliases:
+    - ip: 10.96.100.100
+      hostnames:
+        - gitea.192.168.64.200.sslip.io
+  dind:
+    insecureRegistries:
+      - gitea.192.168.64.200.sslip.io
+
+gitea:
+  ingress:
+    hosts:
+      - host: gitea.192.168.64.200.sslip.io
+        paths:
+          - path: /
+            pathType: Prefix
+  gitea:
+    config:
+      server:
+        ROOT_URL: http://gitea.192.168.64.200.sslip.io/
+        DOMAIN: gitea.192.168.64.200.sslip.io

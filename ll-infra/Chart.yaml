@@ -1,0 +1,15 @@
+apiVersion: v2
+name: ll-infra
+description: >-
+  Layernetes platform umbrella chart: Gitea (git + Actions + OCI registry),
+  ll-api (control plane), ll-operator (LLAgent reconciler), and cloudflared
+  (production edge).
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"
+dependencies:
+  - name: gitea
+    version: 12.6.0
+    repository: https://dl.gitea.com/charts/
+    condition: gitea.enabled

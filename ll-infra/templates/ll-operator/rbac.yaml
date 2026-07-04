@@ -1,0 +1,54 @@
+{{- if .Values.llOperator.enabled }}
+# ll-operator reconciles LLAgent CRs into per-agent namespaces, so it needs
+# cluster-wide rights over the resources it creates there: the namespace
+# itself, the agent Deployment/Service/Ingress, the copied age-key Secret,
+# and NetworkPolicies for isolation.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-ll-operator
+  labels:
+    app.kubernetes.io/name: ll-operator
+    {{- include "ll-infra.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["layernetes.learninglayer.ai"]
+    resources: ["llagents", "llagents/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    # patch/update included: the operator manages namespaces via
+    # server-side apply, which is a PATCH even on first create.
+    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets", "services", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # kopf reads the CRD to discover what it watches.
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-ll-operator
+  labels:
+    app.kubernetes.io/name: ll-operator
+    {{- include "ll-infra.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-ll-operator
+subjects:
+  - kind: ServiceAccount
+    name: ll-operator
+    namespace: {{ .Release.Namespace }}
+{{- end }}

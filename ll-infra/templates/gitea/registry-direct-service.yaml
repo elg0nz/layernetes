@@ -1,0 +1,29 @@
+{{- if .Values.registryDirect.enabled }}
+# In-cluster fast path for OCI registry traffic (local/dev clusters).
+#
+# Multi-GB blob transfers through the ingress controller proved unreliable
+# on local setups, so registry consumers inside the cluster bypass it:
+# this Service pins a known ClusterIP with port 80 -> Gitea 3000, and the
+# registry hostname is pointed at that IP for the act-runner pod (via
+# actRunner.hostAliases) and for node containerd (via /etc/hosts — see
+# hack/kiac-registry-trust.sh). External/browser traffic still uses the
+# ingress.
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-registry-direct
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: gitea-registry-direct
+    {{- include "ll-infra.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: {{ required "registryDirect.clusterIP is required when registryDirect.enabled" .Values.registryDirect.clusterIP }}
+  selector:
+    app.kubernetes.io/name: gitea
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+{{- end }}

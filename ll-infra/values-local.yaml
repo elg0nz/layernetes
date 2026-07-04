@@ -1,0 +1,79 @@
+# Local development overrides (kiac / Colima / k3s / kind).
+#
+#   helm dependency build ll-infra
+#   helm install layernetes ./ll-infra -n layernetes --create-namespace \
+#     -f ll-infra/values-local.yaml
+#
+# Hostnames resolve to 127.0.0.1 via sslip.io; reach them through a
+# port-forward on :8080 (see the repository README). On kiac, MetalLB gives
+# the ingress controller a real IP — switch the hostnames to
+# *.<that-IP>.sslip.io and set urlPortSuffix to "" to use port 80 directly.
+
+global:
+  hosts:
+    gitea: gitea.127.0.0.1.sslip.io
+    api: api.127.0.0.1.sslip.io
+    agents: agents.127.0.0.1.sslip.io
+  urlScheme: http
+  urlPortSuffix: ":8080"
+  ingressClassName: nginx # Colima/k3s ship Traefik: set to `traefik`
+
+giteaAdmin:
+  password: "layernetes-local-dev"
+
+llApi:
+  image:
+    repository: ll-api
+    tag: dev
+
+llOperator:
+  image:
+    repository: ll-operator
+    tag: dev
+
+actRunner:
+  token: "localdevrunnertoken000000000000000000000"
+  dind:
+    insecureRegistries:
+      # The in-cluster Gitea OCI registry is plain HTTP locally.
+      - gitea.127.0.0.1.sslip.io:8080
+      - layernetes-gitea-http.layernetes.svc.cluster.local:3000
+
+cloudflared:
+  enabled: false # nothing sits in front of the ingress controller locally
+
+gitea:
+  # Single replica on a shared RWO PVC with leveldb queues: a rolling update
+  # deadlocks on the queue lock, so replace the pod instead.
+  strategy:
+    type: Recreate
+  ingress:
+    hosts:
+      - host: gitea.127.0.0.1.sslip.io
+        paths:
+          - path: /
+            pathType: Prefix
+  persistence:
+    size: 5Gi
+  # Lightweight single-replica Gitea: sqlite + in-memory caches, no HA deps.
+  postgresql:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  valkey:
+    enabled: false
+  valkey-cluster:
+    enabled: false
+  gitea:
+    config:
+      server:
+        ROOT_URL: http://gitea.127.0.0.1.sslip.io:8080/
+        DOMAIN: gitea.127.0.0.1.sslip.io
+      database:
+        DB_TYPE: sqlite3
+      session:
+        PROVIDER: memory
+      cache:
+        ADAPTER: memory
+      queue:
+        TYPE: level

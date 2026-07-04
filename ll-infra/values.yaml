@@ -1,0 +1,144 @@
+# ll-infra — Layernetes platform umbrella chart.
+# These are the production defaults. For local development, layer
+# values-local.yaml on top (see the repository README).
+
+global:
+  # Public hostnames for the platform. Agents are served at
+  # <sha>.<hosts.agents> by ll-operator-created Ingresses.
+  hosts:
+    gitea: gitea.learninglayer.ai
+    api: api.learninglayer.ai
+    agents: agents.learninglayer.ai
+  # Scheme and optional port suffix (e.g. ":8080" behind a local
+  # port-forward) used when constructing externally reachable URLs.
+  urlScheme: https
+  urlPortSuffix: ""
+  ingressClassName: nginx
+
+# Gitea admin account used by ll-api to provision repos, users, and CI
+# secrets. Rendered into the `ll-gitea-admin` Secret, consumed by both the
+# gitea subchart and ll-api.
+giteaAdmin:
+  username: layernetes-admin
+  password: "change-me-in-production" # CHANGE for real deployments
+  email: admin@learninglayer.ai
+
+llApi:
+  enabled: true
+  replicas: 1
+  image:
+    repository: gitea.learninglayer.ai/layernetes/ll-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  # In-cluster Gitea URL ll-api talks to; empty = the bundled Gitea service.
+  giteaUrl: ""
+  # Full ref of the llagent base image; injected into each repo's Actions
+  # variables as BASE_IMAGE at provisioning time. Gitea registry paths need
+  # an owner segment, e.g. <registry>/<gitea-user>/llagent-base:latest.
+  llagentBaseImage: ""
+  logLevel: info
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  extraEnv: []
+
+llOperator:
+  enabled: true
+  image:
+    repository: gitea.learninglayer.ai/layernetes/ll-operator
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  extraEnv: []
+
+actRunner:
+  enabled: true
+  replicas: 1
+  image:
+    repository: docker.io/gitea/act_runner
+    tag: "0.2.11"
+  # Pre-shared runner registration token (exactly 40 alphanumeric chars).
+  # Stored in the `ll-act-runner-token` Secret; Gitea pre-registers it (via
+  # GITEA_RUNNER_REGISTRATION_TOKEN) and the runner registers with it.
+  # CHANGE for real deployments.
+  token: "changemeprodrunnertoken00000000000000000"
+  labels:
+    - "ubuntu-latest:docker://gitea/runner-images:ubuntu-latest"
+  # Gitea URL the runner registers against; empty = the bundled Gitea service.
+  giteaUrl: ""
+  dind:
+    image:
+      repository: docker.io/library/docker
+      tag: 28-dind
+    # Registries the docker-in-docker daemon may reach over plain HTTP
+    # (the in-cluster Gitea OCI registry, locally).
+    insecureRegistries: []
+
+# In-cluster registry fast path (see templates/gitea/registry-direct-service.yaml).
+# Local/dev only; production registry traffic rides the real edge.
+registryDirect:
+  enabled: false
+  # Must be a free address inside the cluster's service CIDR.
+  clusterIP: ""
+
+cloudflared:
+  enabled: true
+  replicas: 2
+  image:
+    repository: docker.io/cloudflare/cloudflared
+    tag: latest # pin to a release tag in production
+  # Tunnel token: set `token` to have the chart create the Secret, or point
+  # `existingSecret` at a Secret that has a `token` key.
+  token: ""
+  existingSecret: ""
+
+# ── gitea subchart ──────────────────────────────────────────────────────────
+gitea:
+  enabled: true
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      # OCI registry traffic: blob uploads and downloads are multi-GB, so
+      # never cap or buffer them (buffering to nginx's temp files stalls
+      # large layer pulls), and allow slow transfers past the 60s defaults.
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+      nginx.ingress.kubernetes.io/proxy-max-temp-file-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    hosts:
+      - host: gitea.learninglayer.ai # keep in sync with global.hosts.gitea
+        paths:
+          - path: /
+            pathType: Prefix
+  deployment:
+    env:
+      # Pre-registers the shared Actions runner token (see actRunner.token).
+      - name: GITEA_RUNNER_REGISTRATION_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: ll-act-runner-token
+            key: token
+  gitea:
+    admin:
+      existingSecret: ll-gitea-admin
+    config:
+      server:
+        ROOT_URL: https://gitea.learninglayer.ai/ # keep in sync with global.hosts.gitea
+      actions:
+        ENABLED: true
+        DEFAULT_ACTIONS_URL: github
+      packages:
+        ENABLED: true # the built-in OCI registry
+      service:
+        DISABLE_REGISTRATION: true # ll-api provisions users via the admin API

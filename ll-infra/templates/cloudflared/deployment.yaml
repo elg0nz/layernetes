@@ -1,0 +1,46 @@
+{{- if .Values.cloudflared.enabled }}
+# Shared Cloudflare Tunnel: forwards *.agents.<domain> (and the platform
+# hostnames) from Cloudflare's edge to the in-cluster ingress controller.
+# The tunnel and its public-hostname routes are configured on the Cloudflare
+# side; this deployment just runs the connector with its token.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: cloudflared
+    {{- include "ll-infra.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.cloudflared.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflared
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudflared
+        {{- include "ll-infra.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: cloudflared
+          image: "{{ .Values.cloudflared.image.repository }}:{{ .Values.cloudflared.image.tag }}"
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cloudflared.existingSecret | default "ll-cloudflared-token" }}
+                  key: token
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+{{- end }}

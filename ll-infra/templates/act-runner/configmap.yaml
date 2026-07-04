@@ -1,0 +1,28 @@
+{{- if .Values.actRunner.enabled }}
+# act_runner config: job containers join the pod's network namespace (host
+# network from dind's perspective) and talk to the dind daemon on localhost.
+# Without this, jobs that run docker commands (every LLAgent build does)
+# have no daemon: the socket path doesn't exist in the job container.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-act-runner-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: gitea-act-runner
+    {{- include "ll-infra.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    log:
+      level: info
+    runner:
+      # Injected into every job: with the pod-network join below, jobs reach
+      # the dind sidecar on localhost. (container.docker_host alone does not
+      # set DOCKER_HOST inside job containers on act_runner 0.2.x.)
+      envs:
+        DOCKER_HOST: tcp://127.0.0.1:2375
+    container:
+      network: host
+      docker_host: "-"
+      privileged: false
+{{- end }}

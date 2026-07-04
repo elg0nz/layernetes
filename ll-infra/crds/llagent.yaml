@@ -1,0 +1,87 @@
+# The LLAgent custom resource — the contract between ll-api (writes it) and
+# ll-operator (reconciles it). Frozen for the MVP; see the repository README.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: llagents.layernetes.learninglayer.ai
+  labels:
+    app.kubernetes.io/part-of: layernetes
+spec:
+  group: layernetes.learninglayer.ai
+  scope: Namespaced
+  names:
+    kind: LLAgent
+    listKind: LLAgentList
+    plural: llagents
+    singular: llagent
+    shortNames:
+      - lla
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: SHA
+          type: string
+          jsonPath: .spec.sha
+        - name: URL
+          type: string
+          jsonPath: .status.url
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - owner
+                - repo
+                - keySecretRef
+              properties:
+                owner:
+                  type: string
+                  description: Gitea username that owns the agent.
+                repo:
+                  type: string
+                  description: Gitea repository, as <owner>/<name>.
+                image:
+                  type: string
+                  description: >-
+                    Full OCI image reference of the current revision. Empty on
+                    a freshly provisioned "shell" CR, set by the CI callback.
+                sha:
+                  type: string
+                  description: >-
+                    Short commit SHA of the current revision; becomes the
+                    agent's hostname. Only the latest revision runs (MVP).
+                keySecretRef:
+                  type: string
+                  description: >-
+                    Name of the Secret (in the platform namespace) holding the
+                    agent's age private key.
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Deploying
+                    - Ready
+                    - Failed
+                url:
+                  type: string
+                  description: Public base URL of the deployed revision.
+                message:
+                  type: string
+                  description: Human-readable detail, set on Failed.

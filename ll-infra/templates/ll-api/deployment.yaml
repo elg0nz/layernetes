@@ -1,0 +1,79 @@
+{{- if .Values.llApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ll-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: ll-api
+    {{- include "ll-infra.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.llApi.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ll-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ll-api
+        {{- include "ll-infra.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: ll-api
+      containers:
+        - name: ll-api
+          image: "{{ .Values.llApi.image.repository }}:{{ .Values.llApi.image.tag }}"
+          imagePullPolicy: {{ .Values.llApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: GITEA_URL
+              value: {{ .Values.llApi.giteaUrl | default (include "ll-infra.giteaInternalURL" .) | quote }}
+            - name: GITEA_EXTERNAL_URL
+              value: {{ include "ll-infra.giteaExternalURL" . | quote }}
+            - name: GITEA_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ll-gitea-admin
+                  key: username
+            - name: GITEA_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ll-gitea-admin
+                  key: password
+            - name: PLATFORM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: API_EXTERNAL_URL
+              value: "{{ .Values.global.urlScheme }}://{{ .Values.global.hosts.api }}{{ .Values.global.urlPortSuffix }}"
+            - name: AGENTS_DOMAIN
+              value: {{ .Values.global.hosts.agents | quote }}
+            - name: AGENT_URL_SCHEME
+              value: {{ .Values.global.urlScheme | quote }}
+            - name: AGENT_URL_PORT_SUFFIX
+              value: {{ .Values.global.urlPortSuffix | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.llApi.logLevel | quote }}
+            {{- with .Values.llApi.llagentBaseImage }}
+            - name: LLAGENT_BASE_IMAGE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.llApi.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.llApi.resources | nindent 12 }}
+{{- end }}
