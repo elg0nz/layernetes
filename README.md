@@ -182,7 +182,26 @@ kiac create cluster --workers 2
 kubectl get nodes                  # each node is its own VM
 ```
 
-kiac ships MetalLB, local-path storage, and metrics-server, but no ingress controller — install ingress-nginx (command below).
+kiac ships MetalLB, local-path storage, and metrics-server, but no ingress controller — install ingress-nginx (command below). Three kiac-specific setup steps, all scripted in `hack/`:
+
+```sh
+# MetalLB ships with no address pool — give it one on the VM subnet, then
+kubectl apply -f - <<'EOF'   # (or use your own range)
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata: {name: kiac-pool, namespace: metallb-system}
+spec: {addresses: [192.168.64.200-192.168.64.220]}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata: {name: kiac-l2, namespace: metallb-system}
+spec: {ipAddressPools: [kiac-pool]}
+EOF
+hack/kiac-net-offload-fix.sh        # vmnet mangles TSO/GSO on forwarded pod traffic; rerun after node restarts
+hack/kiac-registry-trust.sh gitea.<LB-IP>.sslip.io 10.96.100.100   # plain-HTTP registry trust + direct route
+```
+
+Install the platform with the kiac overlay layered on top of the local values (`-f ll-infra/values-local.yaml -f ll-infra/values-kiac.yaml`) — it moves hostnames to `*.<LB-IP>.sslip.io` and routes in-cluster registry traffic around the ingress. `hack/kiac-load.sh <image>` is the `kind load` equivalent for iterating on `ll-api`/`ll-operator`.
 
 **macOS — Colima.**
 
@@ -255,6 +274,7 @@ curl http://<sha>.agents.127.0.0.1.sslip.io:8080/healthz
 - **Builds can't push to / cluster can't pull from the Gitea registry.** The registry is plain HTTP locally; containerd must trust it as insecure. k3s reads `/etc/rancher/k3s/registries.yaml` — map `gitea.127.0.0.1.sslip.io:8080` to `http://gitea-http.layernetes.svc:3000`. On Colima, edit inside the VM (`colima ssh`) and `colima restart`; on kind, use `containerdConfigPatches`.
 - **Actions runner idle / jobs queued.** The runner registers against Gitea at startup; if Gitea wasn't ready, `kubectl -n layernetes rollout restart deploy/gitea-act-runner`. Image builds need its docker-in-docker sidecar running too.
 - **`sslip.io` doesn't resolve.** Some corporate DNS blocks wildcard DNS; fall back to `/etc/hosts` entries or `nip.io`.
+- **Bulk transfers stall on kiac (image pulls/pushes hang after a few MB, small requests fine).** The Apple vmnet stack mishandles TSO/GSO super-frames on *forwarded* pod traffic — node-local TCP is unaffected, which makes it look like a registry or ingress bug. `hack/kiac-net-offload-fix.sh` disables NIC offloads on every node (measured: stalled → ~600 MB/s). Not persistent across VM restarts.
 - **Out of resources (Colima).** `colima stop && colima start --kubernetes --cpu 6 --memory 12` — cluster state survives.
 - **Port-forward drops.** It's not resilient; rerun it, or use the ingress service's NodePort with the VM IP for something longer-lived.
 
