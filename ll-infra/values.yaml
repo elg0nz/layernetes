@@ -141,4 +141,7 @@ gitea:
       packages:
         ENABLED: true # the built-in OCI registry
       service:
-        DISABLE_REGISTRATION: true # ll-api provisions users via the admin API
+        # Local/dev: closed — pre-create accounts with hack/provision-users.sh.
+        # Production (tier-2 onboarding): set false and gate /user/sign_up
+        # with a Cloudflare Access GitHub policy — see docs/ONBOARDING.md.
+        DISABLE_REGISTRATION: true
