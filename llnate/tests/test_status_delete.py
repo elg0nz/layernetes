@@ -22,7 +22,7 @@ def test_status_ready(runner, env, respx_mock, monkeypatch):
             200,
             json={
                 "phase": "Ready",
-                "url": "https://3f2a91c.agents.learninglayer.ai",
+                "url": "https://3f2a91c.agents.layernetes.learninglayer.ai",
                 "message": "",
             },
         )
@@ -31,7 +31,7 @@ def test_status_ready(runner, env, respx_mock, monkeypatch):
     output = combined_output(result)
     assert result.exit_code == 0, output
     assert "gonz-hello-agent: Ready" in output
-    assert "https://3f2a91c.agents.learninglayer.ai/mcp" in output
+    assert "https://3f2a91c.agents.layernetes.learninglayer.ai/mcp" in output
 
 
 def test_status_failed_exits_nonzero(runner, env, respx_mock, monkeypatch):

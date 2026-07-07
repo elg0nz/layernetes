@@ -98,9 +98,9 @@ Waiting for my-agent to deploy (polling every 2s)...
   phase: Ready
 
 Agent is live:
-  HTTP: https://3f2a91c.agents.learninglayer.ai
-  MCP:  https://3f2a91c.agents.learninglayer.ai/mcp
-  Docs: https://3f2a91c.agents.learninglayer.ai/docs
+  HTTP: https://3f2a91c.agents.layernetes.learninglayer.ai
+  MCP:  https://3f2a91c.agents.layernetes.learninglayer.ai/mcp
+  Docs: https://3f2a91c.agents.layernetes.learninglayer.ai/docs
 ```
 
 The first build takes a few minutes (the CI runner pulls the base image once, then caches). After that, redeploys are fast. And notice the hostname: it's the **SHA of your deployed code**. Every revision has its own stable, addressable URL.
@@ -165,7 +165,7 @@ The surface:
 The plain path — one request, JSON in, JSON out:
 
 ```sh
-URL=https://<sha>.agents.learninglayer.ai   # the URL `push` printed
+URL=https://<sha>.agents.layernetes.learninglayer.ai   # the URL `push` printed
 
 curl -s -X POST $URL/kickoff \
   -H 'Content-Type: application/json' \

@@ -6,9 +6,9 @@ global:
   # Public hostnames for the platform. Agents are served at
   # <sha>.<hosts.agents> by ll-operator-created Ingresses.
   hosts:
-    gitea: gitea.learninglayer.ai
-    api: api.learninglayer.ai
-    agents: agents.learninglayer.ai
+    gitea: gitea.layernetes.learninglayer.ai
+    api: api.layernetes.learninglayer.ai
+    agents: agents.layernetes.learninglayer.ai
   # Scheme and optional port suffix (e.g. ":8080" behind a local
   # port-forward) used when constructing externally reachable URLs.
   urlScheme: https
@@ -20,14 +20,16 @@ global:
 # gitea subchart and ll-api.
 giteaAdmin:
   username: layernetes-admin
-  password: "change-me-in-production" # CHANGE for real deployments
+  # No default on purpose: the install fails until you set a password.
+  # (values-local.yaml sets a known one for local development.)
+  password: ""
   email: admin@learninglayer.ai
 
 llApi:
   enabled: true
   replicas: 1
   image:
-    repository: gitea.learninglayer.ai/layernetes/ll-api
+    repository: gitea.layernetes.learninglayer.ai/layernetes/ll-api
     tag: latest
     pullPolicy: IfNotPresent
   # In-cluster Gitea URL ll-api talks to; empty = the bundled Gitea service.
@@ -48,7 +50,7 @@ llApi:
 llOperator:
   enabled: true
   image:
-    repository: gitea.learninglayer.ai/layernetes/ll-operator
+    repository: gitea.layernetes.learninglayer.ai/layernetes/ll-operator
     tag: latest
     pullPolicy: IfNotPresent
   resources:
@@ -68,8 +70,10 @@ actRunner:
   # Pre-shared runner registration token (exactly 40 alphanumeric chars).
   # Stored in the `ll-act-runner-token` Secret; Gitea pre-registers it (via
   # GITEA_RUNNER_REGISTRATION_TOKEN) and the runner registers with it.
-  # CHANGE for real deployments.
-  token: "changemeprodrunnertoken00000000000000000"
+  # No default on purpose: the install fails until you set one — generate
+  # with `openssl rand -hex 20`. (values-local.yaml sets a known one for
+  # local development.)
+  token: ""
   labels:
     - "ubuntu-latest:docker://gitea/runner-images:ubuntu-latest"
   # Gitea URL the runner registers against; empty = the bundled Gitea service.
@@ -117,7 +121,7 @@ gitea:
       nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     hosts:
-      - host: gitea.learninglayer.ai # keep in sync with global.hosts.gitea
+      - host: gitea.layernetes.learninglayer.ai # keep in sync with global.hosts.gitea
         paths:
           - path: /
             pathType: Prefix
@@ -134,7 +138,7 @@ gitea:
       existingSecret: ll-gitea-admin
     config:
       server:
-        ROOT_URL: https://gitea.learninglayer.ai/ # keep in sync with global.hosts.gitea
+        ROOT_URL: https://gitea.layernetes.learninglayer.ai/ # keep in sync with global.hosts.gitea
       actions:
         ENABLED: true
         DEFAULT_ACTIONS_URL: github

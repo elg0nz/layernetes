@@ -1,11 +1,13 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
 [project]
 name = "ll-api"
 version = "0.1.0"
 description = "Layernetes control-plane API: login, Gitea repo provisioning, age keypair issuance, deploy status"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Sanscourier.ai", email = "business@sanscourier.ai" }]
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.110",

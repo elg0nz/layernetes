@@ -77,7 +77,7 @@ DEPLOY_WORKFLOW = '''\
 # Repo configuration this workflow expects (set on the Gitea repo by ll-api
 # at provisioning time):
 #   vars.REGISTRY        - OCI registry host, e.g. gitea.example.com
-#   vars.LL_API_URL      - ll-api base URL, e.g. https://api.learninglayer.ai
+#   vars.LL_API_URL      - ll-api base URL, e.g. https://api.layernetes.learninglayer.ai
 #   secrets.LL_API_TOKEN - repo-scoped token for the ll-api builds callback
 # Optional:
 #   vars.BASE_IMAGE      - full ref of the llagent base image; defaults to

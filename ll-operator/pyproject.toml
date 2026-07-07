@@ -1,11 +1,13 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ll-operator"
 version = "0.1.0"
 description = "Layernetes Kubernetes operator: reconciles LLAgent custom resources into per-agent namespaces, deployments, services, ingresses, and network policies."
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Sanscourier.ai", email = "business@sanscourier.ai" }]
 requires-python = ">=3.11"
 dependencies = [
     "kopf>=1.37,<2",

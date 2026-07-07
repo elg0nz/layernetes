@@ -7,5 +7,12 @@ __pycache__/
 # Helm dependency downloads (Chart.lock is committed; the tgz is not)
 ll-infra/charts/
 
-# Local cluster credentials
+# Local cluster credentials — never commit these, any spelling
 *.kubeconfig
+*kubeconfig*
+kubeconfig
+.kube/
+
+# OS / tooling
+.DS_Store
+.claude/

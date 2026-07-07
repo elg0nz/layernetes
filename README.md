@@ -2,6 +2,8 @@
 
 Build, ship, and host [CrewAI](https://github.com/crewAIInc/crewAI)-powered AI agents on the [Learning Layer](https://www.learninglayer.ai/) cloud — a Kubernetes platform running on Talos Linux.
 
+Layernetes is developed by [Sanscourier.ai](https://sanscourier.ai), which licenses it to [Learning Layer](https://www.learninglayer.ai/) for the Learning Layer cloud. Sanscourier.ai reserves all rights — see [License](#license).
+
 Write your agent locally with your favorite coding assistant, then `llnate push` deploys it to a sandboxed environment with its own public URL, callable via MCP or plain HTTP.
 
 ## Quickstart
@@ -92,7 +94,7 @@ spec:
   keySecretRef: age-key-gonz      # Secret holding the age private key
 status:
   phase: Pending | Deploying | Ready | Failed
-  url: https://3f2a91c.agents.learninglayer.ai
+  url: https://3f2a91c.agents.layernetes.learninglayer.ai
   message: ""                     # human-readable detail on Failed
 ```
 
@@ -277,6 +279,26 @@ curl http://<sha>.agents.127.0.0.1.sslip.io:8080/healthz
 - **Bulk transfers stall on kiac (image pulls/pushes hang after a few MB, small requests fine).** The Apple vmnet stack mishandles TSO/GSO super-frames on *forwarded* pod traffic — node-local TCP is unaffected, which makes it look like a registry or ingress bug. `hack/kiac-net-offload-fix.sh` disables NIC offloads on every node (measured: stalled → ~600 MB/s). Not persistent across VM restarts.
 - **Out of resources (Colima).** `colima stop && colima start --kubernetes --cpu 6 --memory 12` — cluster state survives.
 - **Port-forward drops.** It's not resilient; rerun it, or use the ingress service's NodePort with the VM IP for something longer-lived.
+
+## License
+
+Copyright © 2026 [Sanscourier.ai](https://sanscourier.ai). All rights
+reserved.
+
+Layernetes was developed by Sanscourier.ai, which licenses it to
+[Learning Layer](https://www.learninglayer.ai/) for operating the Learning
+Layer cloud, and releases the source to the public under the
+[GNU Affero General Public License v3.0 or later](LICENSE)
+(AGPL-3.0-or-later). Under the AGPL you may use, study, modify, and
+redistribute Layernetes — but if you run a modified version as a network
+service, you must offer its source to the users of that service under the
+same license.
+
+Sanscourier.ai retains all rights not expressly granted by the AGPL,
+including the exclusive right to offer Layernetes under alternative
+commercial terms. For commercial licensing, contact
+<business@sanscourier.ai>. Contributions are accepted by application only —
+see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## References
 

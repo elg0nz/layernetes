@@ -13,7 +13,7 @@ LOGGER = logging.getLogger("test")
 
 ENV = {
     "PLATFORM_NAMESPACE": "layernetes",
-    "AGENTS_DOMAIN": "agents.learninglayer.ai",
+    "AGENTS_DOMAIN": "agents.layernetes.learninglayer.ai",
     "AGENT_URL_SCHEME": "https",
     "AGENT_URL_PORT_SUFFIX": "",
     "INGRESS_CLASS_NAME": "nginx",
@@ -56,7 +56,7 @@ def fake_k8s(monkeypatch):
 def test_config_from_env():
     cfg = main.Config.from_env()
     assert cfg.platform_namespace == "layernetes"
-    assert cfg.agents_domain == "agents.learninglayer.ai"
+    assert cfg.agents_domain == "agents.layernetes.learninglayer.ai"
     assert cfg.ingress_controller_namespaces == ("ingress-nginx", "kube-system")
 
 
@@ -86,7 +86,7 @@ def test_full_reconcile_applies_stack_and_reports_deploying(fake_k8s):
     assert dep_body["spec"]["template"]["spec"]["containers"][0]["image"] == SPEC["image"]
 
     ing_body = fake_k8s.apply_ingress.call_args.args[0]
-    assert ing_body["spec"]["rules"][0]["host"] == "3f2a91c.agents.learninglayer.ai"
+    assert ing_body["spec"]["rules"][0]["host"] == "3f2a91c.agents.layernetes.learninglayer.ai"
     assert ing_body["spec"]["ingressClassName"] == "nginx"
 
     fake_k8s.apply_service.assert_called_once()
@@ -105,7 +105,7 @@ def test_reconcile_ready_sets_url(fake_k8s):
     main.reconcile(name="gonz-hello-agent", spec=SPEC, patch=patch, logger=LOGGER)
     assert patch.status == {
         "phase": "Ready",
-        "url": "https://3f2a91c.agents.learninglayer.ai",
+        "url": "https://3f2a91c.agents.layernetes.learninglayer.ai",
         "message": "",
     }
 
@@ -155,7 +155,7 @@ def test_monitor_is_a_noop_when_status_is_current(fake_k8s):
         spec=SPEC,
         status={
             "phase": "Ready",
-            "url": "https://3f2a91c.agents.learninglayer.ai",
+            "url": "https://3f2a91c.agents.layernetes.learninglayer.ai",
             "message": "",
         },
         patch=patch,

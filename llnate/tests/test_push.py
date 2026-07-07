@@ -38,7 +38,7 @@ def test_push_streams_transitions_until_ready(runner, env, stub_bin, respx_mock,
                 200,
                 json={
                     "phase": "Ready",
-                    "url": "https://3f2a91c.agents.learninglayer.ai",
+                    "url": "https://3f2a91c.agents.layernetes.learninglayer.ai",
                     "message": "",
                 },
             ),
@@ -52,9 +52,9 @@ def test_push_streams_transitions_until_ready(runner, env, stub_bin, respx_mock,
     assert "phase: Pending" in output
     assert "phase: Deploying" in output
     assert "phase: Ready" in output
-    assert "HTTP: https://3f2a91c.agents.learninglayer.ai" in output
-    assert "MCP:  https://3f2a91c.agents.learninglayer.ai/mcp" in output
-    assert "Docs: https://3f2a91c.agents.learninglayer.ai/docs" in output
+    assert "HTTP: https://3f2a91c.agents.layernetes.learninglayer.ai" in output
+    assert "MCP:  https://3f2a91c.agents.layernetes.learninglayer.ai/mcp" in output
+    assert "Docs: https://3f2a91c.agents.layernetes.learninglayer.ai/docs" in output
 
 
 def test_push_failed_deploy_exits_nonzero(runner, env, stub_bin, respx_mock, monkeypatch):

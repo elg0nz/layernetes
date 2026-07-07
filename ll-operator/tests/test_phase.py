@@ -10,7 +10,7 @@ SPEC = {
     "keySecretRef": "age-key-gonz",
 }
 URL_ARGS = dict(
-    agents_domain="agents.learninglayer.ai",
+    agents_domain="agents.layernetes.learninglayer.ai",
     url_scheme="https",
     url_port_suffix="",
 )
@@ -49,7 +49,7 @@ def test_available_condition_is_ready_with_url():
     }
     result = compute(SPEC, status)
     assert result["phase"] == "Ready"
-    assert result["url"] == "https://3f2a91c.agents.learninglayer.ai"
+    assert result["url"] == "https://3f2a91c.agents.layernetes.learninglayer.ai"
     assert result["message"] == ""
 
 

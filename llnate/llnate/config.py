@@ -5,7 +5,7 @@ Config lives at ``$XDG_CONFIG_HOME/llnate/config.toml`` (defaulting to
 
 1. ``LLNATE_API_URL`` environment variable
 2. ``api_url`` in the config file
-3. ``https://api.learninglayer.ai``
+3. ``https://api.layernetes.learninglayer.ai``
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import os
 import tomllib
 from pathlib import Path
 
-DEFAULT_API_URL = "https://api.learninglayer.ai"
+DEFAULT_API_URL = "https://api.layernetes.learninglayer.ai"
 
 
 def config_dir() -> Path:

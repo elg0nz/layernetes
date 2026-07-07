@@ -9,7 +9,7 @@ or are meant to be public (agents).
 
 A new user's entire onboarding:
 
-1. Visit `https://gitea.learninglayer.ai/user/sign_up` → Cloudflare
+1. Visit `https://gitea.layernetes.learninglayer.ai/user/sign_up` → Cloudflare
    interposes "sign in with GitHub" → allowed users reach the Gitea signup
    form and pick a username + password.
 2. `pipx install llnate` (or clone + install), then
@@ -40,7 +40,7 @@ and it's the only URL a newcomer touches before they have credentials.
    **GitHub** as an identity provider (a GitHub OAuth app; Cloudflare
    docs walk through it).
 2. **Zero Trust → Access → Applications → Add an application** (self-hosted):
-   - Application domain: `gitea.learninglayer.ai`, path `user/sign_up`.
+   - Application domain: `gitea.layernetes.learninglayer.ai`, path `user/sign_up`.
    - Session duration: short (e.g. 30 minutes) — it only guards signup.
 3. **Policy** (Allow): Login method = GitHub, plus whichever membership
    rule fits — specific emails, email domain, or GitHub organization

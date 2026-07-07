@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: llnate
+            install: pip install -e '.[dev]'
+          - package: ll-api
+            install: pip install -e '.[dev]'
+          - package: ll-operator
+            install: pip install -e '.[dev]'
+          - package: llagent-base
+            # No pyproject: a thin wrapper baked into the base image. Pins
+            # must match llagent-base/Dockerfile.
+            install: pip install pytest fastmcp==3.4.2 fastapi==0.139.0
+    name: pytest ${{ matrix.package }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: ${{ matrix.install }}
+      - run: pytest -q
+
+  helm:
+    runs-on: ubuntu-latest
+    name: helm lint + render
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - run: helm dependency build ll-infra
+      - run: helm lint ll-infra -f ll-infra/values-local.yaml
+      # Bare defaults must FAIL (no credentials shipped); local values must render.
+      - run: |
+          if helm template layernetes ./ll-infra -n layernetes > /dev/null 2>&1; then
+            echo "::error::chart rendered with default values — credential guards are gone"
+            exit 1
+          fi
+      - run: helm template layernetes ./ll-infra -n layernetes -f ll-infra/values-local.yaml > /dev/null
+      - run: helm template layernetes ./ll-infra -n layernetes -f ll-infra/values-local.yaml -f ll-infra/values-kiac.yaml > /dev/null

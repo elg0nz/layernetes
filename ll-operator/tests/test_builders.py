@@ -7,7 +7,7 @@ NS = "agent-gonz-hello-agent"
 IMAGE = "gitea.example/gonz/hello-agent:3f2a91c"
 SHA = "3f2a91c"
 KEY_SECRET = "age-key-gonz"
-DOMAIN = "agents.learninglayer.ai"
+DOMAIN = "agents.layernetes.learninglayer.ai"
 
 
 def test_agent_namespace_name():
@@ -15,10 +15,10 @@ def test_agent_namespace_name():
 
 
 def test_agent_hostname_and_url():
-    assert builders.agent_hostname(SHA, DOMAIN) == "3f2a91c.agents.learninglayer.ai"
+    assert builders.agent_hostname(SHA, DOMAIN) == "3f2a91c.agents.layernetes.learninglayer.ai"
     assert (
         builders.agent_url(SHA, DOMAIN, "https", "")
-        == "https://3f2a91c.agents.learninglayer.ai"
+        == "https://3f2a91c.agents.layernetes.learninglayer.ai"
     )
     assert (
         builders.agent_url(SHA, "agents.127.0.0.1.sslip.io", "http", ":8080")
@@ -119,7 +119,7 @@ def test_ingress_shape():
     assert ing["spec"]["ingressClassName"] == "nginx"
     rules = ing["spec"]["rules"]
     assert len(rules) == 1  # only the latest revision resolves (MVP)
-    assert rules[0]["host"] == "3f2a91c.agents.learninglayer.ai"
+    assert rules[0]["host"] == "3f2a91c.agents.layernetes.learninglayer.ai"
     path = rules[0]["http"]["paths"][0]
     assert path["path"] == "/"
     assert path["pathType"] == "Prefix"

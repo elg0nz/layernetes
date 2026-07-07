@@ -1,11 +1,13 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
 [project]
 name = "llnate"
 version = "0.1.0"
 description = "Layernetes CLI: scaffold, ship, and host CrewAI agents on the Learning Layer cloud"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Sanscourier.ai", email = "business@sanscourier.ai" }]
 requires-python = ">=3.12"
 dependencies = [
     "typer>=0.12",
