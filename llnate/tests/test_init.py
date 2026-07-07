@@ -15,6 +15,8 @@ EXPECTED_FILES = [
     "keys.env.example",
     ".gitignore",
     "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
 ]
 
 
@@ -89,8 +91,75 @@ def test_crew_py_exposes_module_level_crew(runner, env):
     result = runner.invoke(app, ["init", "my-agent"])
     assert result.exit_code == 0
     source = (env / "my-agent" / "crew.py").read_text()
-    assert "crew = Crew(" in source
+    assert "class AssistantCrew(Crew):" in source
+    assert "crew = AssistantCrew(" in source
+    assert "@@NAME@@" not in source  # name placeholder was substituted
     compile(source, "crew.py", "exec")  # syntactically valid
+
+
+def test_crew_py_normalizes_caller_input(runner, env, monkeypatch):
+    """The scaffolded crew coerces any caller payload to a non-empty question,
+    so the `{question}` template can never crash interpolation (AGENTS.md §3)."""
+    import importlib.util
+    import sys
+    import types
+
+    result = runner.invoke(app, ["init", "my-agent"])
+    assert result.exit_code == 0, result.output
+
+    # Stub crewai so crew.py imports without the real (heavy) package. The
+    # stub Crew.kickoff echoes back the inputs it received, letting us observe
+    # exactly what AssistantCrew normalized the caller's payload to.
+    crewai = types.ModuleType("crewai")
+
+    class _Stub:
+        def __init__(self, *args, **kwargs):
+            pass
+
+    class Crew(_Stub):
+        def kickoff(self, inputs=None, input_files=None, from_checkpoint=None):
+            return inputs
+
+    crewai.Agent = _Stub
+    crewai.Task = _Stub
+    crewai.Crew = Crew
+    monkeypatch.setitem(sys.modules, "crewai", crewai)
+
+    path = env / "my-agent" / "crew.py"
+    spec = importlib.util.spec_from_file_location("scaffolded_crew", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # constructs Agent/Task/AssistantCrew
+
+    kick = module.crew.kickoff
+    # Exact key passes through untouched.
+    assert kick({"question": "What is 2+2?"})["question"] == "What is 2+2?"
+    # A differently-keyed payload (the old trap) is mapped, not crashed.
+    assert kick({"topic": "hello"})["question"] == "hello"
+    # A single unknown key still yields its value as the question.
+    assert kick({"foo": "bar"})["question"] == "bar"
+    # Empty / missing input falls back to a non-empty default.
+    assert kick({})["question"]
+    assert kick(None)["question"]
+
+
+def test_agents_md_covers_the_contract_and_llnate_usage(runner, env):
+    result = runner.invoke(app, ["init", "my-agent"])
+    assert result.exit_code == 0, result.output
+    agents = (env / "my-agent" / "AGENTS.md").read_text()
+
+    # The one hard runtime rule.
+    assert "module-level" in agents
+    assert "crew.kickoff(inputs=inputs)" in agents
+    # Version pins match the base image (llagent-base/Dockerfile).
+    assert "crewai 1.15.1" in agents
+    # "how to use llnate" -- the developer-loop commands are documented.
+    for command in ("llnate login", "llnate keys", "llnate push", "llnate status"):
+        assert command in agents, f"AGENTS.md should document `{command}`"
+    # The input convention the scaffold now implements is documented.
+    assert "AssistantCrew" in agents
+    assert "_coerce_question" in agents
+    # No monorepo-only path leaked in from the template draft.
+    assert "~/Code/layernetes" not in agents
 
 
 def test_init_refuses_existing_directory(runner, env):
@@ -99,9 +168,16 @@ def test_init_refuses_existing_directory(runner, env):
     assert result.exit_code == 1
 
 
+def test_init_writes_claude_md_pointing_at_agents_md(runner, env):
+    result = runner.invoke(app, ["init", "my-agent"])
+    assert result.exit_code == 0, result.output
+    content = (env / "my-agent" / "CLAUDE.md").read_text()
+    assert "AGENTS.md" in content
+
+
 def test_plugin_install_writes_claude_md(runner, env):
     result = runner.invoke(app, ["plugin", "install"])
     assert result.exit_code == 0, result.output
     content = (env / "CLAUDE.md").read_text()
-    assert "module-level `crew`" in content
-    assert "https://github.com/crewAIInc/crewAI#build-with-ai" in content
+    # CLAUDE.md is a thin pointer at the real guidance in AGENTS.md.
+    assert "AGENTS.md" in content

@@ -122,9 +122,9 @@ def plugin_install():
     target.write_text(scaffold.CLAUDE_MD, encoding="utf-8")
     typer.echo(f"Wrote {target}")
     typer.echo(
-        "MVP stub: this installs coding-assistant guidance (CLAUDE.md) describing\n"
-        "the LLAgent conventions (module-level `crew` in crew.py, tools/tasks,\n"
-        "secrets handling). Full CrewAI 'Build with AI' wiring\n"
+        "CLAUDE.md points your coding assistant at AGENTS.md -- the source of\n"
+        "truth for this project's runtime contract and the llnate workflow\n"
+        "(both scaffolded by `llnate init`). Full CrewAI 'Build with AI' wiring\n"
         "(https://github.com/crewAIInc/crewAI#build-with-ai) is post-MVP."
     )
 

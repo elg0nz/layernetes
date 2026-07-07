@@ -10,7 +10,9 @@ Write your agent locally with your favorite coding assistant, then `llnate push`
 
 ```sh
 # 1. Scaffold a new LLAgent: a CrewAI-based agent project, plus the
-#    Dockerfile, CI workflow, and sops-aware entrypoint it needs in our cloud
+#    Dockerfile and CI workflow it needs in our cloud — and an AGENTS.md that
+#    documents the runtime contract and the llnate developer loop for your
+#    coding assistant
 llnate init my-agent
 cd my-agent
 
