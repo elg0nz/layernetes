@@ -6,16 +6,21 @@ import httpx
 from app.kube import PUBLIC_KEY_ANNOTATION
 
 
-def seed_agent(cr_store, secret_store, owner="gonz", name="hello-agent", ci_token="ci-tok", status=None):
+def seed_agent(
+    cr_store, secret_store, owner="gonz", name="hello-agent", ci_token="ci-tok", status=None, sha=None
+):
     """Drop an already-provisioned agent straight into the fake stores."""
     from kubernetes import client as k8s
 
     cr_name = f"{owner}-{name}"
+    spec = {"owner": owner, "repo": f"{owner}/{name}", "keySecretRef": f"age-key-{owner}"}
+    if sha is not None:
+        spec["sha"] = sha
     cr = {
         "apiVersion": "layernetes.learninglayer.ai/v1alpha1",
         "kind": "LLAgent",
         "metadata": {"name": cr_name, "namespace": "layernetes"},
-        "spec": {"owner": owner, "repo": f"{owner}/{name}", "keySecretRef": f"age-key-{owner}"},
+        "spec": spec,
     }
     if status is not None:
         cr["status"] = status
@@ -211,7 +216,7 @@ class TestStatus:
         name = seed_agent(cr_store, secret_store)
         resp = client.get(f"/v1/agents/{name}/status", headers=headers)
         assert resp.status_code == 200
-        assert resp.json() == {"phase": "Pending", "url": "", "message": ""}
+        assert resp.json() == {"phase": "Pending", "url": "", "message": "", "sha": ""}
 
     def test_passthrough_and_short_name(self, client, as_user, secret_store, cr_store):
         headers, _ = as_user()
@@ -219,12 +224,14 @@ class TestStatus:
             cr_store,
             secret_store,
             status={"phase": "Ready", "url": "http://3f2a91c.agents.127.0.0.1.sslip.io:8080"},
+            sha="3f2a91c",
         )
         resp = client.get("/v1/agents/hello-agent/status", headers=headers)
         assert resp.json() == {
             "phase": "Ready",
             "url": "http://3f2a91c.agents.127.0.0.1.sslip.io:8080",
             "message": "",
+            "sha": "3f2a91c",
         }
 
     def test_owner_only(self, client, as_user, secret_store, cr_store):

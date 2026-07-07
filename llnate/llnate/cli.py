@@ -40,6 +40,23 @@ def _run_git(args: list[str], cwd: Path | None = None, **kwargs) -> subprocess.C
     return subprocess.run(["git", *args], cwd=cwd, **kwargs)
 
 
+def _head_short_sha() -> str:
+    """First 7 chars of HEAD — matches the deploy workflow's ``${GITHUB_SHA::7}``,
+    which is the sha CI reports back and the operator deploys."""
+    result = _run_git(["rev-parse", "HEAD"], capture_output=True, text=True)
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()[:7]
+
+
+def _sha_matches(reported: str, target: str) -> bool:
+    """True when two short SHAs name the same commit (prefix-compatible, so a
+    length mismatch between CI's and ours never causes a false negative)."""
+    if not reported or not target:
+        return False
+    return reported.startswith(target) or target.startswith(reported)
+
+
 def _require_login() -> dict:
     cfg = config.load()
     if not cfg.get("token") or not cfg.get("username"):
@@ -292,6 +309,11 @@ def push():
     cfg = _require_login()
     cr_name = _cr_name(cfg["username"])
 
+    # The revision we're about to ship. Until the platform reports THIS sha,
+    # any phase it returns (a stale Ready or Failed, with the previous
+    # revision's URL) belongs to an earlier deploy and must be ignored.
+    target_sha = _head_short_sha()
+
     typer.echo("Pushing to layernetes remote...")
     # Streamed: git inherits stdout/stderr.
     result = _run_git(["push", "layernetes", "HEAD:main"])
@@ -303,6 +325,7 @@ def push():
     deadline = start + PUSH_TIMEOUT_SECONDS
     last_phase = None
     stale_notice_shown = False
+    building_notice_shown = False
     with _client(cfg) as client:
         while True:
             try:
@@ -310,11 +333,23 @@ def push():
             except api.ApiError as exc:
                 raise _fail(str(exc))
             phase = status.get("phase", "Unknown")
-            # A Failed observed before any other phase within the grace
-            # window is almost certainly the PREVIOUS revision's status —
-            # CI hasn't reported the new sha yet. Keep waiting for the
-            # status to move before judging this deploy.
-            if (
+
+            if target_sha and "sha" in status:
+                # Precise gate: trust phase only once the platform reports our
+                # revision's sha. Before CI's build callback lands, the status
+                # still describes the previous revision (this is the bug fix:
+                # a leftover Ready/Failed no longer ends the push early).
+                if not _sha_matches(status.get("sha", ""), target_sha):
+                    if not building_notice_shown:
+                        typer.echo("  building new revision...")
+                        building_notice_shown = True
+                    if time.monotonic() >= deadline:
+                        raise _fail("timed out waiting for CI to build the new revision")
+                    time.sleep(POLL_INTERVAL_SECONDS)
+                    continue
+            elif (
+                # Legacy ll-api that doesn't report a sha: fall back to the
+                # best-effort stale-Failed grace window.
                 phase == "Failed"
                 and last_phase is None
                 and time.monotonic() - start < STALE_FAILURE_GRACE_SECONDS

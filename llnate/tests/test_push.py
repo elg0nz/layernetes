@@ -102,6 +102,42 @@ def test_push_waits_out_stale_failed_status(runner, env, stub_bin, respx_mock, m
     assert "HTTP: https://abc1234.agents.test" in output
 
 
+def test_push_ignores_stale_ready_from_previous_revision(
+    runner, env, stub_bin, respx_mock, monkeypatch
+):
+    """A Ready left over from the previous revision must not end the push with
+    the old URL. Once the status reports a sha, we wait until it matches the
+    revision we just pushed."""
+    _setup_project(env, monkeypatch)
+    write_stub(stub_bin, "git", GIT_OK)  # `git rev-parse HEAD` -> "stub-git ..."[:7]
+    monkeypatch.setattr("llnate.cli.time.sleep", lambda seconds: None)
+
+    target = "stub-gi"  # first 7 chars of the stub's rev-parse output
+    respx_mock.get("http://api.test/v1/agents/gonz-hello-agent/status").mock(
+        side_effect=[
+            # stale Ready for the PREVIOUS revision — different sha, old URL
+            httpx.Response(
+                200, json={"phase": "Ready", "sha": "0old000", "url": "https://old.agents.test"}
+            ),
+            httpx.Response(
+                200, json={"phase": "Ready", "sha": "0old000", "url": "https://old.agents.test"}
+            ),
+            # our revision starts building and goes live
+            httpx.Response(200, json={"phase": "Deploying", "sha": target, "url": ""}),
+            httpx.Response(
+                200, json={"phase": "Ready", "sha": target, "url": "https://new.agents.test"}
+            ),
+        ]
+    )
+
+    result = runner.invoke(app, ["push"])
+    output = combined_output(result)
+    assert result.exit_code == 0, output
+    assert "building new revision" in output
+    assert "HTTP: https://old.agents.test" not in output
+    assert "HTTP: https://new.agents.test" in output
+
+
 def test_push_git_failure_aborts_before_polling(runner, env, stub_bin, respx_mock, monkeypatch):
     _setup_project(env, monkeypatch)
     write_stub(stub_bin, "git", GIT_FAIL)

@@ -215,10 +215,12 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
     ) -> AgentStatusResponse:
         cr = resolve_owned_agent(get_kube(request), user, name)
         status = cr.get("status") or {}
+        spec = cr.get("spec") or {}
         return AgentStatusResponse(
             phase=status.get("phase") or "Pending",
             url=status.get("url") or "",
             message=status.get("message") or "",
+            sha=spec.get("sha") or "",
         )
 
     @app.delete("/v1/agents/{name}", status_code=204)

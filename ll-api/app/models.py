@@ -41,3 +41,7 @@ class AgentStatusResponse(BaseModel):
     phase: str = "Pending"
     url: str = ""
     message: str = ""
+    # The deployed revision's short SHA (from LLAgent.spec.sha). Empty until
+    # CI reports the first build. `llnate push` uses this to tell its own
+    # revision apart from a stale status left by a previous one.
+    sha: str = ""

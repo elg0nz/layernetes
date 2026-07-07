@@ -108,7 +108,7 @@ Everything `llnate` and CI talk to. Auth: `Authorization: Bearer <token>` — us
 | `GET /v1/me` | user | Identity + the user's age **public** key (used by `llnate keys`) |
 | `POST /v1/agents` | user | Provision: create Gitea repo, generate age keypair, create `LLAgent` shell |
 | `POST /v1/agents/{name}/builds` | CI | CI callback: `{"sha": "...", "image": "..."}` — updates `LLAgent.spec` |
-| `GET /v1/agents/{name}/status` | user | `{"phase": "...", "url": "...", "message": "..."}` — `llnate push` polls this every 2s until `Ready` or `Failed` |
+| `GET /v1/agents/{name}/status` | user | `{"phase": "...", "url": "...", "message": "...", "sha": "..."}` — `llnate push` polls this every 2s. `sha` is the deployed revision (from `LLAgent.spec.sha`); `push` waits until it matches the sha it pushed, so a stale status from the previous revision can't end the poll early. |
 | `DELETE /v1/agents/{name}` | user | Teardown: delete `LLAgent`, namespace, Gitea repo (backs `llnate delete`) |
 
 ### Agent runtime contract

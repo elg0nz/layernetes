@@ -220,10 +220,12 @@ reserved path on the ingress-nginx controller that returns 200 for *any*
 Host header, so it would mask a properly-removed ingress. `/docs` falls
 through to nginx's default backend (404) once the old ingress is gone.
 
-Note: after the second `push` returns, `$LLNATE status` (and the URL the
-push itself printed) can briefly still show the *old* sha — the CR's status
-only advances to the new revision once CI reports its build, a few seconds
-behind the git push. Re-run `$LLNATE status` until the hostname changes, or
+Note: `$LLNATE push` waits for the platform to report the sha it just
+pushed, so the URLs it prints are always the new revision's (it won't exit
+early against a stale Ready). The standalone `$LLNATE status` command,
+however, just reports the CR's current state, which only advances to the new
+revision once CI reports its build — a few seconds behind the git push. If
+`status` still shows the old sha right after a push, give it a moment, or
 read the live sha with
 `kubectl -n layernetes get llagent <cr> -o jsonpath='{.spec.sha}'`.
 
