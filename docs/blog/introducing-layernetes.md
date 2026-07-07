@@ -147,15 +147,59 @@ Python everywhere, on purpose. The CLI and the control plane share the same sche
 
 ---
 
-## What your agent actually exposes
+## Calling your agent — HTTP *and* MCP
 
-Every deployed agent honors one small runtime contract — the `init` template and base image guarantee it, so you never think about it:
+Once `push` prints a URL, your crew is live at `<sha>.agents.…` and callable **two ways from the same endpoint**. You wrote a `crew` object in `crew.py`; the base image wraps it as a `kickoff` operation and exposes it over both a REST API and an MCP server. Whatever the caller prefers, it's the same crew.
 
-- **`GET /healthz`** — the operator gates `Ready` on this.
-- **`/mcp`** — a built-in [FastMCP](https://github.com/jlowin/fastmcp) server. Your agent plugs straight into MCP clients like Claude.
-- **`/docs` + REST routes** — a [FastAPI](https://fastapi.tiangolo.com/) surface for everything else.
+The surface:
 
-A real MCP `initialize` handshake against a freshly-pushed agent returns exactly what you'd hope — `serverInfo`, tool capabilities, the works. It's not a shim; it's a real MCP server that happens to be your crew.
+| Path | What it is |
+| --- | --- |
+| `GET /healthz` | liveness — `{"ok":true,"agent":"…"}` (the operator gates `Ready` on it) |
+| `POST /kickoff` | **REST**: `{"inputs":{…}}` → `{"result":"…"}` |
+| `/mcp` | **MCP** ([FastMCP](https://github.com/jlowin/fastmcp)) exposing a `kickoff` tool |
+| `/docs`, `/openapi.json` | [FastAPI](https://fastapi.tiangolo.com/) interactive docs + schema |
+
+### Over HTTP
+
+The plain path — one request, JSON in, JSON out:
+
+```sh
+URL=https://<sha>.agents.learninglayer.ai   # the URL `push` printed
+
+curl -s -X POST $URL/kickoff \
+  -H 'Content-Type: application/json' \
+  -d '{"inputs": {"topic": "quantum computing"}}'
+# → {"result": "...your crew's output..."}
+```
+
+`inputs` is whatever your crew's `kickoff(inputs=…)` expects — pass `{}` if it takes none. Browse `/docs` for the live schema.
+
+### Over MCP
+
+Point any MCP client — Claude included — at `<url>/mcp` and your agent shows up as a tool named `kickoff`. No SDK, no wrapper: it's a real [streamable-HTTP MCP](https://modelcontextprotocol.io) server that happens to be your crew.
+
+To drive it by hand, it's the standard MCP handshake. `initialize` returns an `mcp-session-id` header you echo back on every later call:
+
+```sh
+# 1. initialize — grab the session id from the response headers
+SID=$(curl -sD - -o /dev/null -X POST $URL/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"cli","version":"0"}}}' \
+  | awk 'tolower($1)=="mcp-session-id:"{print $2}' | tr -d '\r')
+
+# 2. say hello
+curl -s -o /dev/null -X POST $URL/mcp -H "mcp-session-id: $SID" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+
+# 3. call the crew (responses stream back as `data:` SSE lines)
+curl -s -X POST $URL/mcp -H "mcp-session-id: $SID" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"kickoff","arguments":{"inputs":{"topic":"quantum computing"}}}}'
+```
+
+`tools/list` (same session) returns the `kickoff` tool and its schema — exactly what an MCP client reads to know how to call your agent. It's not a shim; it's a real MCP server, and it's the *same* crew the REST endpoint runs.
 
 ---
 

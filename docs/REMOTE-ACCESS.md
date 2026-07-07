@@ -95,6 +95,36 @@ prints — `http://<sha>.agents.192.168.64.200.sslip.io` (`/healthz`, `/mcp`,
 `/docs`) — are reachable from this machine too, so you can exercise the full
 runtime contract remotely.
 
+## Calling the deployed crew (HTTP and MCP)
+
+Your `crew.py` is wrapped as a `kickoff` operation, served two ways from the
+agent URL. `inputs` is whatever your crew's `kickoff(inputs=…)` expects.
+
+```sh
+URL=http://<sha>.agents.192.168.64.200.sslip.io   # the URL `push` printed
+
+# --- HTTP (FastAPI): one request, JSON in/out ---
+curl -s -X POST $URL/kickoff \
+  -H 'Content-Type: application/json' \
+  -d '{"inputs": {"topic": "quantum computing"}}'
+# → {"result": "..."}         (browse $URL/docs for the live schema)
+
+# --- MCP (FastMCP): add $URL/mcp to any MCP client (e.g. Claude), or by hand ---
+SID=$(curl -sD - -o /dev/null -X POST $URL/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"cli","version":"0"}}}' \
+  | awk 'tolower($1)=="mcp-session-id:"{print $2}' | tr -d '\r')
+
+curl -s -o /dev/null -X POST $URL/mcp -H "mcp-session-id: $SID" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+
+curl -s -X POST $URL/mcp -H "mcp-session-id: $SID" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"kickoff","arguments":{"inputs":{"topic":"quantum computing"}}}}'
+# → streams back `data: {...}` with the crew result (tool name: kickoff)
+```
+
 ## Troubleshooting
 
 | Symptom | Cause / fix |
