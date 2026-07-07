@@ -211,9 +211,21 @@ OLD=$($LLNATE status | grep HTTP | awk '{print $2}')
 git commit --allow-empty -m "second revision" && $LLNATE push
 NEW=$($LLNATE status | grep HTTP | awk '{print $2}')
 [ "$OLD" != "$NEW" ] && echo "new sha hostname: OK"
-curl -s -o /dev/null -w '%{http_code}\n' $NEW/healthz   # 200
-curl -s -o /dev/null -w '%{http_code}\n' $OLD/healthz   # 404 — old sha stopped resolving
+curl -s -o /dev/null -w '%{http_code}\n' $NEW/docs   # 200 — new agent up
+curl -s -o /dev/null -w '%{http_code}\n' $OLD/docs   # 404 — old sha stopped resolving
 ```
+
+Check the old sha on `/docs` (or `/`), **not** `/healthz`: `/healthz` is a
+reserved path on the ingress-nginx controller that returns 200 for *any*
+Host header, so it would mask a properly-removed ingress. `/docs` falls
+through to nginx's default backend (404) once the old ingress is gone.
+
+Note: after the second `push` returns, `$LLNATE status` (and the URL the
+push itself printed) can briefly still show the *old* sha — the CR's status
+only advances to the new revision once CI reports its build, a few seconds
+behind the git push. Re-run `$LLNATE status` until the hostname changes, or
+read the live sha with
+`kubectl -n layernetes get llagent <cr> -o jsonpath='{.spec.sha}'`.
 
 ### 6d. Teardown
 
