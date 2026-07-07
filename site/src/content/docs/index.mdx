@@ -1,0 +1,68 @@
+---
+title: "Layernetes: git push your AI agents"
+description: Build, ship, and host CrewAI-powered AI agents on the Learning Layer cloud — write your crew locally, then `llnate push` deploys it with its own public URL.
+template: splash
+hero:
+  title: Layernetes
+  tagline: "<code>git push</code> your AI agents. Write a CrewAI crew locally, then <code>llnate push</code> ships it to a sandboxed environment with its own public URL — callable over MCP or plain HTTP."
+  actions:
+    - text: Get started
+      link: /onboarding/
+      icon: right-arrow
+    - text: Read the blog
+      link: /blog/
+      variant: minimal
+    - text: View on GitHub
+      link: https://github.com/elg0nz/layernetes
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## From empty directory to a live agent in five commands
+
+```sh
+llnate init my-agent      # scaffold a CrewAI agent + everything the cloud needs
+cd my-agent
+llnate plugin install     # wire up AI coding hooks (CrewAI's "Build with AI")
+# ... build your agent with your coding assistant ...
+llnate login              # provisions your cloud repo + encryption keys
+llnate keys               # encrypt your API keys into the repo, safely
+llnate push               # deploy — streams progress, prints your URLs
+```
+
+`push` blocks until your agent is live and prints its public URLs — one for MCP,
+one for plain HTTP. Anyone (or any Claude) can call it.
+
+<CardGrid stagger>
+  <Card title="git push to deploy" icon="rocket">
+    One command takes you from local crew to a live, publicly-addressable agent.
+    Every revision gets a stable URL that is the SHA of your deployed code.
+  </Card>
+  <Card title="MCP and HTTP, same endpoint" icon="seti:json">
+    Every agent ships a built-in FastMCP server and a FastAPI interface. Point an
+    MCP client at `<url>/mcp`, or POST to `/kickoff` — it's the same crew.
+  </Card>
+  <Card title="Secrets that never leak" icon="approve-check">
+    Credentials are encrypted with sops + age, committed as ciphertext, and
+    decrypted in-memory at startup. Readable by exactly one thing: your agent.
+  </Card>
+  <Card title="Runs on your laptop" icon="laptop">
+    The entire platform — Gitea, control plane, operator, agents — runs locally.
+    Not a mock: the same code that runs the Learning Layer cloud.
+  </Card>
+</CardGrid>
+
+## Learn more
+
+<CardGrid>
+  <Card title="Introducing Layernetes" icon="open-book">
+    The introduction and usage guide — what Layernetes is, how to ship an agent,
+    and what happens under the hood. [Read the post →](/blog/introducing-layernetes/)
+  </Card>
+  <Card title="Onboarding" icon="add-document">
+    Sign up and ship your first agent on the production cluster.
+    [Get started →](/onboarding/)
+  </Card>
+</CardGrid>

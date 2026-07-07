@@ -1,4 +1,9 @@
-# Introducing Layernetes: `git push` your AI agents
+---
+title: "Introducing Layernetes: `git push` your AI agents"
+date: 2026-07-07
+authors: layernetes
+excerpt: Building an AI agent has never been easier. Hosting one is still a mess. Layernetes collapses the deploy plumbing into one command — write your crew, `llnate push`, done.
+---
 
 Building an AI agent has never been easier. Hosting one is still a mess.
 

@@ -1,4 +1,7 @@
-# Onboarding (production / Talos)
+---
+title: Onboarding (production / Talos)
+description: How a new user signs up and ships their first agent on the production cluster.
+---
 
 **Decision: self-serve registration, gated by GitHub identity at the edge.**
 Gitea registration is open, but the signup page sits behind a Cloudflare

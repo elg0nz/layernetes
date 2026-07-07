@@ -147,5 +147,6 @@ gitea:
       service:
         # Local/dev: closed — pre-create accounts with hack/provision-users.sh.
         # Production (tier-2 onboarding): set false and gate /user/sign_up
-        # with a Cloudflare Access GitHub policy — see docs/ONBOARDING.md.
+        # with a Cloudflare Access GitHub policy — see the Onboarding guide
+        # (site/src/content/docs/ONBOARDING.md).
         DISABLE_REGISTRATION: true

@@ -1,4 +1,7 @@
-# Reaching a local kiac cluster from another machine (Tailscale)
+---
+title: Reaching a local kiac cluster from another machine (Tailscale)
+description: Use a Tailscale subnet router to reach a local kiac cluster's ingress from another machine.
+---
 
 The local platform lives on the Mac that runs kiac: the ingress LoadBalancer
 sits at `192.168.64.200`, and every platform hostname

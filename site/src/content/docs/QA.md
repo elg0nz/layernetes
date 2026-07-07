@@ -1,4 +1,7 @@
-# QA guide
+---
+title: QA guide
+description: A hands-on walkthrough to verify every package and every contract in the README.
+---
 
 A hands-on walkthrough to verify every package and every contract in the
 README. Ordered so each section builds on the previous one; run it top to
