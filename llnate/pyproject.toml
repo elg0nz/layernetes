@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llnate"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Layernetes CLI: scaffold, ship, and host CrewAI agents on the Learning Layer cloud"
 license = "AGPL-3.0-or-later"
 authors = [{ name = "Sanscourier.ai", email = "business@sanscourier.ai" }]
@@ -24,6 +24,9 @@ dev = [
 
 [project.scripts]
 llnate = "llnate.cli:app"
+
+[tool.hatch.version]
+path = "llnate/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["llnate"]
