@@ -55,6 +55,13 @@ def test_push_streams_transitions_until_ready(runner, env, stub_bin, respx_mock,
     assert "HTTP: https://3f2a91c.agents.layernetes.learninglayer.ai" in output
     assert "MCP:  https://3f2a91c.agents.layernetes.learninglayer.ai/mcp" in output
     assert "Docs: https://3f2a91c.agents.layernetes.learninglayer.ai/docs" in output
+    assert (
+        "curl -s -X POST https://3f2a91c.agents.layernetes.learninglayer.ai/kickoff" in output
+    )
+    assert (
+        "claude mcp add --transport http agent "
+        "https://3f2a91c.agents.layernetes.learninglayer.ai/mcp" in output
+    )
 
 
 def test_push_failed_deploy_exits_nonzero(runner, env, stub_bin, respx_mock, monkeypatch):

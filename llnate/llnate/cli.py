@@ -193,7 +193,7 @@ def login(
     _set_remote(_embed_credentials(clone_url, username, token))
     typer.echo(f"Provisioned repo: {agent.get('repo', agent_name)}")
     typer.echo(f"Remote 'layernetes' -> {clone_url}")
-    typer.echo("Next: `llnate keys` to encrypt credentials, then `llnate push`.")
+    typer.echo("Next: `llnate keys` to encrypt credentials, commit, and deploy.")
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ def _collect_pairs(pairs: list[str] | None) -> list[str]:
 
 @app.command()
 def keys(pairs: list[str] = typer.Argument(None, help="KEY=VALUE pairs to encrypt.")):
-    """Encrypt credentials into keys.env with sops/age (safe to commit)."""
+    """Encrypt credentials into keys.env, commit them, and push/deploy."""
     cfg = _require_login()
 
     age_public_key = cfg.get("age_public_key")
@@ -288,7 +288,18 @@ def keys(pairs: list[str] = typer.Argument(None, help="KEY=VALUE pairs to encryp
     )
     typer.echo(f"Encrypted {len(collected)} credential(s) into keys.env")
     typer.echo("Wrote .sops.yaml (so `sops keys.env` edits keep working)")
-    typer.echo("keys.env is encrypted -- commit it alongside your code.")
+
+    _run_git(["add", "keys.env", ".sops.yaml"])
+    commit = _run_git(["commit", "-m", "Update encrypted keys.env"], capture_output=True, text=True)
+    if commit.returncode != 0:
+        if "nothing to commit" in (commit.stdout + commit.stderr):
+            typer.echo("keys.env unchanged; nothing to commit.")
+        else:
+            raise _fail(f"git commit failed: {commit.stderr.strip()}")
+    else:
+        typer.echo("Committed keys.env")
+
+    push()
 
 
 # ---------------------------------------------------------------------------
@@ -296,11 +307,17 @@ def keys(pairs: list[str] = typer.Argument(None, help="KEY=VALUE pairs to encryp
 # ---------------------------------------------------------------------------
 
 
-def _print_urls(url: str) -> None:
+def _print_summary(url: str) -> None:
     base = url.rstrip("/")
     typer.echo(f"  HTTP: {base}")
     typer.echo(f"  MCP:  {base}/mcp")
     typer.echo(f"  Docs: {base}/docs")
+    typer.echo("\nTry it:")
+    typer.echo(f"""  curl -s -X POST {base}/kickoff \\
+    -H 'Content-Type: application/json' \\
+    -d '{{"inputs": {{"question": "How many berries in strawberry?"}}}}'""")
+    typer.echo("\nAdd to Claude Code:")
+    typer.echo(f"  claude mcp add --transport http agent {base}/mcp")
 
 
 @app.command()
@@ -370,7 +387,7 @@ def push():
 
             if phase == "Ready":
                 typer.echo("\nAgent is live:")
-                _print_urls(status.get("url", ""))
+                _print_summary(status.get("url", ""))
                 return
             if phase == "Failed":
                 raise _fail(f"deploy failed: {status.get('message') or '(no detail)'}")
@@ -393,7 +410,7 @@ def status():
     if info.get("message"):
         typer.echo(f"  message: {info['message']}")
     if info.get("url"):
-        _print_urls(info["url"])
+        _print_summary(info["url"])
     if info.get("phase") == "Failed":
         raise typer.Exit(code=1)
 
