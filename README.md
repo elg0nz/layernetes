@@ -150,7 +150,7 @@ That call is the *only* coupling between CI and the platform — the pipeline kn
 
 Python everywhere, on purpose: one language across CLI, control plane, and operator means shared models (the CLI and `ll-api` use the same pydantic schemas) and no context switching. Routing needs no custom edge code — the ingress controller routes `<sha>` hostnames, and the Cloudflare Tunnel just points at it.
 
-The production cluster runs on [Talos Linux](https://www.talos.dev/), a minimal, API-managed OS built for Kubernetes.
+The production cluster runs on [Talos Linux](https://www.talos.dev/), a minimal, API-managed OS built for Kubernetes. To stand the platform up on a fresh Talos cluster — one script, with the ArgoCD/GitOps and reachability details — follow **[docs/TALOS.md](docs/TALOS.md)**.
 
 ## Developing locally
 

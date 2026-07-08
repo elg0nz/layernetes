@@ -13,6 +13,10 @@ ll-infra/charts/
 kubeconfig
 .kube/
 
+# Generated Helm secret values (admin password, runner token) — see hack/talos-bootstrap.sh
+*.secret.yaml
+hack/talos.env
+
 # OS / tooling
 .DS_Store
 .claude/

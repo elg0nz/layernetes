@@ -1,0 +1,102 @@
+# Talos overlay — layer on top of the chart defaults (values.yaml):
+#
+#   helm upgrade --install layernetes ./ll-infra -n layernetes --create-namespace \
+#     -f ll-infra/values-talos.yaml -f ll-infra/values-talos.secret.yaml
+#
+# But you normally do NOT run that by hand — `hack/talos-bootstrap.sh --domain
+# <your-domain>` fills in the hostnames/image repos below from --domain, brings
+# up Gitea first, pushes the platform images into it, then installs the rest.
+# See docs/TALOS.md.
+#
+# ── What this overlay assumes ────────────────────────────────────────────────
+# * Reachability is handled OUTSIDE the cluster (Tailscale here; Cloudflare
+#   later) — so cloudflared is OFF and there is no MetalLB/LoadBalancer config.
+#   An in-cluster ingress controller still routes the <sha>.agents.* hostnames;
+#   the bootstrap script installs ingress-nginx unless you pass --skip-ingress.
+# * Gitea IS the auth layer: self-registration stays disabled (inherited from
+#   values.yaml); create logins with hack/provision-users.sh.
+# * Single-node-friendly Gitea: sqlite + in-memory caches, one PVC, no HA
+#   subcharts. Switch to the bundled postgresql-ha for real HA later.
+#
+# ── If you deploy via ArgoCD (or plain helm) instead of the script ───────────
+# Replace every `layernetes.example.com` below with your domain (or your
+# <tailscale-ip>.sslip.io base), and set the two image repositories + the gitea
+# ROOT_URL/DOMAIN/ingress host to match. The script does all of this for you.
+
+global:
+  hosts:
+    gitea: gitea.layernetes.example.com # ← your domain (script fills from --domain)
+    api: api.layernetes.example.com
+    agents: agents.layernetes.example.com
+  # Plain HTTP over the tailnet; put TLS/Cloudflare in front of the ingress later.
+  urlScheme: http
+  urlPortSuffix: ""
+  ingressClassName: nginx
+
+llApi:
+  # Pulled from the in-cluster Gitea registry (the bootstrap script builds and
+  # pushes these). Host must equal global.hosts.gitea.
+  image:
+    repository: gitea.layernetes.example.com/layernetes/ll-api
+    tag: latest
+  # Base image injected into each repo's Actions as BASE_IMAGE at provisioning.
+  llagentBaseImage: gitea.layernetes.example.com/layernetes/llagent-base:latest
+
+llOperator:
+  image:
+    repository: gitea.layernetes.example.com/layernetes/ll-operator
+    tag: latest
+
+# The in-cluster Gitea OCI registry is plain HTTP; the CI docker-in-docker
+# daemon must be told to trust it (both the external host and the in-cluster
+# Service DNS the runner resolves).
+actRunner:
+  dind:
+    insecureRegistries:
+      - gitea.layernetes.example.com
+      - layernetes-gitea-http.layernetes.svc.cluster.local:3000
+
+# Edge is handled by Tailscale (Cloudflare later) — nothing in-cluster fronts
+# the ingress controller here.
+cloudflared:
+  enabled: false
+
+# ── gitea subchart: light single-replica profile ────────────────────────────
+gitea:
+  # One replica on a shared RWO PVC with leveldb queues: a rolling update
+  # deadlocks on the queue lock, so replace the pod instead.
+  strategy:
+    type: Recreate
+  ingress:
+    hosts:
+      - host: gitea.layernetes.example.com # keep in sync with global.hosts.gitea
+        paths:
+          - path: /
+            pathType: Prefix
+  persistence:
+    size: 10Gi
+    # Uses the cluster's default StorageClass. The bootstrap script installs
+    # local-path-provisioner and marks it default if none exists; set
+    # `storageClass:` here to pin a specific one.
+  # No HA dependencies — sqlite + in-memory caches suit a single control plane.
+  postgresql:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  valkey:
+    enabled: false
+  valkey-cluster:
+    enabled: false
+  gitea:
+    config:
+      server:
+        ROOT_URL: http://gitea.layernetes.example.com/ # keep in sync with hosts.gitea
+        DOMAIN: gitea.layernetes.example.com
+      database:
+        DB_TYPE: sqlite3
+      session:
+        PROVIDER: memory
+      cache:
+        ADAPTER: memory
+      queue:
+        TYPE: level
