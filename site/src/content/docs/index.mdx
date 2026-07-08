@@ -1,13 +1,13 @@
 ---
-title: "Layernetes: git push your AI agents"
-description: Build, ship, and host CrewAI-powered AI agents on the Learning Layer cloud — write your crew locally, then `llnate push` deploys it with its own public URL.
+title: "Layernetes: the cloud for AI agents"
+description: Layernetes is Learning Layer's cloud for AI agents. Write your agent, run llnate push, and it goes live at a public URL any human or any AI can call. Exclusive to the AI floor.
 template: splash
 hero:
-  title: Layernetes
-  tagline: "<code>git push</code> your AI agents. Write a CrewAI crew locally, then <code>llnate push</code> ships it to a sandboxed environment with its own public URL — callable over MCP or plain HTTP."
+  title: The cloud for AI agents
+  tagline: "Write your agent, run <code>llnate push</code>, and it goes live at a public URL any human or any AI can call. Exclusive to Learning Layer's AI floor."
   actions:
     - text: Get started
-      link: /onboarding/
+      link: /blog/introducing-layernetes/#try-it
       icon: right-arrow
     - text: Read the blog
       link: /blog/
@@ -20,37 +20,41 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## From empty directory to a live agent in five commands
+## From your laptop to a public URL, in one push.
+
+Building the agent is the fast part now. Layernetes is everything after: the
+container, the registry, the secrets, the ingress, the URL, the TLS. It already
+runs. You write the agent and push.
 
 ```sh
-llnate init my-agent      # scaffold a CrewAI agent + everything the cloud needs
+llnate init my-agent      # scaffold your agent plus everything the cloud expects
 cd my-agent
-llnate plugin install     # wire up AI coding hooks (CrewAI's "Build with AI")
-# ... build your agent with your coding assistant ...
-llnate login              # provisions your cloud repo + encryption keys
+llnate plugin install     # wire up your AI coding assistant
+# ... build your agent live, the way you build everything now ...
+llnate login              # claims your cloud repo and encryption keys
 llnate keys               # encrypt your API keys into the repo, safely
-llnate push               # deploy — streams progress, prints your URLs
+llnate push               # deploy: streams progress, prints your live URL
 ```
 
-`push` blocks until your agent is live and prints its public URLs — one for MCP,
-one for plain HTTP. Anyone (or any Claude) can call it.
+`push` blocks until your agent is live, then prints its public URL. Paste it into a
+demo, drop it in a channel, or point Claude at it. No dashboard, no cloud account.
 
 <CardGrid stagger>
-  <Card title="git push to deploy" icon="rocket">
-    One command takes you from local crew to a live, publicly-addressable agent.
-    Every revision gets a stable URL that is the SHA of your deployed code.
+  <Card title="Ship in one command" icon="rocket">
+    One `llnate push` takes local code to a live, public URL. Every revision gets its
+    own stable address, named for the SHA of your deployed code.
   </Card>
-  <Card title="MCP and HTTP, same endpoint" icon="seti:json">
-    Every agent ships a built-in FastMCP server and a FastAPI interface. Point an
-    MCP client at `<url>/mcp`, or POST to `/kickoff` — it's the same crew.
+  <Card title="Callable from Claude" icon="seti:json">
+    Every agent ships an MCP endpoint and a plain HTTP API at the same URL. Point
+    Claude at `/mcp`, or POST to `/kickoff`. Same agent, either way.
   </Card>
   <Card title="Secrets that never leak" icon="approve-check">
-    Credentials are encrypted with sops + age, committed as ciphertext, and
-    decrypted in-memory at startup. Readable by exactly one thing: your agent.
+    Your API keys are encrypted, committed as ciphertext, and decrypted in memory at
+    startup. One thing can read them: your running agent.
   </Card>
-  <Card title="Runs on your laptop" icon="laptop">
-    The entire platform — Gitea, control plane, operator, agents — runs locally.
-    Not a mock: the same code that runs the Learning Layer cloud.
+  <Card title="Exclusive to the AI floor" icon="star">
+    Layernetes is Learning Layer's own cloud, reserved for the people building on the
+    AI floor. No AWS account, no infra to run. The platform comes with your membership.
   </Card>
 </CardGrid>
 
@@ -58,11 +62,16 @@ one for plain HTTP. Anyone (or any Claude) can call it.
 
 <CardGrid>
   <Card title="Introducing Layernetes" icon="open-book">
-    The introduction and usage guide — what Layernetes is, how to ship an agent,
-    and what happens under the hood. [Read the post →](/blog/introducing-layernetes/)
+    The introduction and usage guide. What Layernetes is, how to ship an agent, and
+    what happens under the hood. [Read the post →](/blog/introducing-layernetes/)
   </Card>
-  <Card title="Onboarding" icon="add-document">
-    Sign up and ship your first agent on the production cluster.
-    [Get started →](/onboarding/)
+  <Card title="Get access" icon="add-document">
+    Layernetes is members only for now. Here's how to get on the cloud.
+    [How to try it →](/blog/introducing-layernetes/#try-it)
   </Card>
 </CardGrid>
+
+<p style="text-align: center; opacity: 0.7; font-size: 0.9em; margin-top: 3rem;">
+  Built by <a href="https://sanscourier.ai">Sanscourier.ai</a> for the
+  <a href="https://www.learninglayer.ai/">Learning Layer</a> cloud.
+</p>

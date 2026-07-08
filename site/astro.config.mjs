@@ -12,7 +12,7 @@ export default defineConfig({
     starlight({
       title: 'Layernetes',
       description:
-        'Build, ship, and host CrewAI-powered AI agents on the Learning Layer cloud.',
+        "Learning Layer's cloud for AI agents. Write your agent, run llnate push, and it goes live at a public URL any human or any AI can call. Exclusive to the AI floor.",
       social: [
         {
           icon: 'github',
@@ -31,16 +31,7 @@ export default defineConfig({
           },
         }),
       ],
-      sidebar: [
-        {
-          label: 'Docs',
-          items: [
-            { label: 'Onboarding', slug: 'onboarding' },
-            { label: 'QA guide', slug: 'qa' },
-            { label: 'Remote access', slug: 'remote-access' },
-          ],
-        },
-      ],
+      sidebar: [{ label: 'Overview', slug: 'overview' }],
     }),
   ],
 });
