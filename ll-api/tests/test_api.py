@@ -266,3 +266,13 @@ class TestDelete:
     def test_missing_agent(self, client, as_user):
         headers, _ = as_user()
         assert client.delete("/v1/agents/ghost", headers=headers).status_code == 404
+
+    def test_admin_can_delete_others_agent(self, client, as_user, gitea_mock, kube, secret_store, cr_store):
+        headers, _ = as_user(username="root-admin", is_admin=True)
+        name = seed_agent(cr_store, secret_store, owner="gonz")
+        repo_route = gitea_mock.delete("/api/v1/repos/gonz/hello-agent").respond(204)
+
+        resp = client.delete(f"/v1/agents/{name}", headers=headers)
+        assert resp.status_code == 204
+        assert name not in cr_store
+        assert repo_route.called

@@ -236,6 +236,10 @@ GITIGNORE = '''\
 # NOTE: keys.env is intentionally NOT ignored -- it is sops/age encrypted
 # and is meant to be committed alongside your code.
 
+# Local pointer to this project's LLAgent CR name (see `llnate login`).
+# Not project source -- deliberately excluded from the repo.
+.llnate.toml
+
 __pycache__/
 *.py[cod]
 .venv/

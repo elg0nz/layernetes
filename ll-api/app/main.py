@@ -93,7 +93,7 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
     settings = settings or Settings.from_env()
     logging.basicConfig(level=settings.log_level.upper())
 
-    app = FastAPI(title="ll-api", version="0.1.0")
+    app = FastAPI(title="ll-api", version="0.2.0")
     app.state.settings = settings
     app.state.gitea = GiteaClient(
         settings.gitea_url,
@@ -107,12 +107,23 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
             request.app.state.kube = Kube(settings.platform_namespace)
         return request.app.state.kube
 
-    def resolve_owned_agent(kube: Kube, user: AuthedUser, name: str) -> dict:
-        """Find the caller's LLAgent by full CR name or short repo name."""
+    def resolve_owned_agent(
+        kube: Kube, user: AuthedUser, name: str, *, allow_admin: bool = False
+    ) -> dict:
+        """Find the caller's LLAgent by full CR name or short repo name.
+
+        With allow_admin=True, a Gitea site-admin caller may also act on any
+        agent by its full CR name (the short-name-as-owner-prefix shorthand
+        only makes sense for the owner, so admins must pass the full name).
+        """
         candidates = dict.fromkeys([name, f"{user.username}-{name}"])
         for candidate in candidates:
             cr = kube.get_llagent(candidate)
-            if cr is not None and cr.get("spec", {}).get("owner") == user.username:
+            if cr is None:
+                continue
+            if cr.get("spec", {}).get("owner") == user.username:
+                return cr
+            if allow_admin and user.is_admin:
                 return cr
         raise HTTPException(status_code=404, detail="agent not found")
 
@@ -228,8 +239,9 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
         name: str, request: Request, user: AuthedUser = Depends(require_user)
     ) -> Response:
         kube = get_kube(request)
-        cr = resolve_owned_agent(kube, user, name)
+        cr = resolve_owned_agent(kube, user, name, allow_admin=True)
         cr_name = cr["metadata"]["name"]
+        cr_owner = cr["spec"]["owner"]
         owner, _, repo_name = cr["spec"]["repo"].partition("/")
 
         # The operator's finalizer tears down the agent namespace.
@@ -237,7 +249,8 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
         app.state.gitea.delete_repo(user.token, owner, repo_name)
         kube.delete_secret(_ci_secret_name(cr_name))
         # The age-key Secret is per-user (shared across agents) and is kept.
-        logger.info("deleted agent %s", cr_name)
+        as_admin = " as admin" if cr_owner != user.username else ""
+        logger.info("deleted agent %s (owner=%s) by %s%s", cr_name, cr_owner, user.username, as_admin)
         return Response(status_code=204)
 
     return app

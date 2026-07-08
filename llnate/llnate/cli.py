@@ -13,7 +13,7 @@ from urllib.parse import quote, urlsplit, urlunsplit
 
 import typer
 
-from . import __version__, api, config, scaffold
+from . import __version__, api, config, project, scaffold
 
 app = typer.Typer(
     name="llnate",
@@ -65,8 +65,14 @@ def _require_login() -> dict:
 
 
 def _cr_name(username: str) -> str:
-    """LLAgent CR name: <username>-<current directory name>."""
-    return f"{username}-{Path.cwd().name}"
+    """LLAgent CR name for this project.
+
+    Prefers `.llnate.toml`'s `agent_name` (written by `login`, and
+    hand-writable for recovery -- see `project.py`); falls back to
+    <username>-<current directory name> for projects predating that file.
+    """
+    saved = project.load().get("agent_name")
+    return saved or f"{username}-{Path.cwd().name}"
 
 
 def _client(cfg: dict | None = None) -> api.Client:
@@ -188,6 +194,9 @@ def login(
     if age_public_key:
         config.update(age_public_key=age_public_key)
         typer.echo(f"age public key: {age_public_key}")
+
+    if agent.get("name"):
+        project.save(agent_name=agent["name"])
 
     clone_url = agent["clone_url"]
     _set_remote(_embed_credentials(clone_url, username, token))

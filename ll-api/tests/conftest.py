@@ -128,8 +128,10 @@ def gitea_mock():
 def as_user(gitea_mock):
     """Mock Gitea identity resolution; returns (headers, username)."""
 
-    def _login(username="gonz", token="user-token-123"):
-        gitea_mock.get("/api/v1/user").respond(200, json={"id": 1, "login": username})
+    def _login(username="gonz", token="user-token-123", is_admin=False):
+        gitea_mock.get("/api/v1/user").respond(
+            200, json={"id": 1, "login": username, "is_admin": is_admin}
+        )
         return {"Authorization": f"Bearer {token}"}, username
 
     return _login

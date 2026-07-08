@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-08
+
+### Added
+
+- `login` now writes `.llnate.toml` in the project root, pinning the
+  project's LLAgent CR name. `push`/`status`/`delete` prefer it over
+  re-deriving `<username>-<current-dir-name>`, which broke if the project
+  directory was renamed. Falls back to the old derivation when the file is
+  absent, and it can be hand-written to recover a lost local clone (ownership
+  is still enforced server-side, and `delete` still confirms before acting).
+  Gitignored by the scaffold as a local pointer, not project source.
+
 ## [0.1.1] - 2026-07-08
 
 ### Added

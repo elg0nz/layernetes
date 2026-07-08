@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import httpx
 
+from llnate import project as project_config
 from llnate.cli import app
 
 from .conftest import combined_output, logged_in_config
@@ -92,3 +93,20 @@ def test_delete_api_error(runner, env, respx_mock, monkeypatch):
     result = runner.invoke(app, ["delete", "--yes"])
     assert result.exit_code == 1
     assert "agent not found" in combined_output(result)
+
+
+def test_delete_uses_llnate_toml_over_directory_name(runner, env, respx_mock, monkeypatch):
+    """Recovery path: a lost/renamed local clone still resolves via a
+    hand-written .llnate.toml, ignoring the (unrelated) directory name."""
+    recovered = env / "some-other-folder-name"
+    recovered.mkdir()
+    monkeypatch.chdir(recovered)
+    logged_in_config()
+    project_config.save(agent_name="gonz-hello-agent")
+
+    route = respx_mock.delete("http://api.test/v1/agents/gonz-hello-agent").mock(
+        return_value=httpx.Response(204)
+    )
+    result = runner.invoke(app, ["delete", "--yes"])
+    assert result.exit_code == 0, combined_output(result)
+    assert route.call_count == 1

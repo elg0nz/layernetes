@@ -20,6 +20,7 @@ _bearer = HTTPBearer(auto_error=False)
 class AuthedUser:
     username: str
     token: str
+    is_admin: bool = False
 
 
 def bearer_token(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> str:
@@ -35,4 +36,4 @@ def require_user(request: Request, token: str = Depends(bearer_token)) -> Authed
         if exc.status_code in (401, 403):
             raise HTTPException(status_code=401, detail="invalid token") from exc
         raise HTTPException(status_code=502, detail=f"gitea: {exc.detail}") from exc
-    return AuthedUser(username=user["login"], token=token)
+    return AuthedUser(username=user["login"], token=token, is_admin=user.get("is_admin", False))

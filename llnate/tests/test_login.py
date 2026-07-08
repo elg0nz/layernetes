@@ -6,6 +6,7 @@ import subprocess
 import httpx
 
 from llnate import config
+from llnate import project as project_config
 from llnate.cli import app
 
 from .conftest import combined_output
@@ -51,6 +52,8 @@ def test_login_saves_config_and_configures_remote(runner, env, respx_mock, monke
     assert cfg["token"] == "tok-secret"
     assert cfg["api_url"] == "http://api.test"
     assert cfg["age_public_key"] == "age1testkey"
+
+    assert project_config.load()["agent_name"] == "gonz-hello-agent"
 
     remote = subprocess.run(
         ["git", "remote", "get-url", "layernetes"],
