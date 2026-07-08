@@ -14,5 +14,11 @@
     "astro": "^7.0.6",
     "sharp": "^0.35.3",
     "starlight-blog": "^0.27.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.107.1"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
   }
 }
