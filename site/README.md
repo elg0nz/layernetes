@@ -35,7 +35,7 @@ npm run build      # production build → dist/
 npm run preview    # serve the built dist/ locally
 ```
 
-Node 20+ is required (CI pins Node 20).
+Node 22.12+ is required (CI pins Node 22; Astro 7 no longer supports Node 20).
 
 ## Deployment
 
@@ -59,6 +59,21 @@ but the deploy won't succeed until:
    - `CLOUDFLARE_ACCOUNT_ID` — your account ID (dashboard URL, or `wrangler whoami`)
 
 After that, the next push to `main` publishes to `https://layernetes.pages.dev`.
+
+### Manual deploy
+
+To publish without waiting on CI (e.g. to test a Cloudflare config change, or
+to redeploy the last build), build locally and push straight to Pages:
+
+```sh
+cd site
+npm run build
+npx wrangler pages deploy dist --project-name=layernetes --branch=main
+```
+
+Requires being logged in (`npx wrangler login`) or having
+`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` set in your shell. `--branch=main`
+forces a production deploy — omitting it lands on a preview URL instead.
 
 ### Custom domain (optional follow-up)
 
