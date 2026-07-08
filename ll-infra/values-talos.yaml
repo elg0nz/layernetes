@@ -9,10 +9,11 @@
 # See docs/TALOS.md.
 #
 # ── What this overlay assumes ────────────────────────────────────────────────
-# * Reachability is handled OUTSIDE the cluster (Tailscale here; Cloudflare
-#   later) — so cloudflared is OFF and there is no MetalLB/LoadBalancer config.
-#   An in-cluster ingress controller still routes the <sha>.agents.* hostnames;
-#   the bootstrap script installs ingress-nginx unless you pass --skip-ingress.
+# * cloudflared is OFF: the edge is reached directly for now. Pass --lb-pool to
+#   the bootstrap script to install MetalLB and give the ingress controller a
+#   real LoadBalancer IP on your LAN; Tailscale / Cloudflare can front it in a
+#   future version. (MetalLB is cluster infra, not chart config — nothing here.)
+#   The in-cluster ingress controller routes the <sha>.agents.* hostnames.
 # * Gitea IS the auth layer: self-registration stays disabled (inherited from
 #   values.yaml); create logins with hack/provision-users.sh.
 # * Single-node-friendly Gitea: sqlite + in-memory caches, one PVC, no HA

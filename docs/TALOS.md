@@ -20,7 +20,7 @@ one of those gaps, in idempotent phases (safe to re-run):
 | --- | --- |
 | 0 preflight | checks tools, prints the kubectl context, waits for nodes |
 | 1 storage | installs local-path-provisioner (Talos paths under `/var`) if no default StorageClass |
-| 2 ingress | installs ingress-nginx (bare-metal / NodePort) if the `nginx` class is missing |
+| 2 network | installs MetalLB + an address pool if you pass `--lb-pool`, then ingress-nginx (LoadBalancer with MetalLB, else NodePort) |
 | 3 namespace | creates `layernetes`, labels it `pod-security…/enforce=privileged` (the CI docker-in-docker sidecar needs it) |
 | 4 secrets | generates the Gitea admin password + Actions runner token once, into a gitignored file |
 | 5 Gitea-first | installs the chart with `ll-api`/`ll-operator` **off**, so Gitea + its registry come up |
@@ -64,8 +64,18 @@ you're taking the [ArgoCD](#gitops-with-argocd) path.
 ## 2 · Run the bootstrap
 
 ```sh
-hack/talos-bootstrap.sh --domain layernetes.example.com --users "alice bob"
+hack/talos-bootstrap.sh \
+  --domain layernetes.example.com \
+  --lb-pool "192.168.1.240-192.168.1.250" \
+  --users "alice bob"
 ```
+
+`--lb-pool` is a spare, unused IP range on your nodes' LAN subnet. It installs
+MetalLB and gives the ingress controller a real `EXTERNAL-IP` from that range, so
+you reach the platform directly on the LAN — no NodePort juggling. (Tailscale or
+Cloudflare can front that IP in a future version; for now this is the simplest
+reachable setup.) Omit `--lb-pool` and ingress-nginx installs as NodePort
+instead.
 
 It prints the context it's about to install into and asks for confirmation (pass
 `--yes` to skip). On success it prints the platform URLs and where the generated
@@ -127,22 +137,29 @@ curl http://<sha>.agents.layernetes.example.com/healthz
 
 ---
 
-## Reachability (Tailscale / Cloudflare)
+## Reachability (MetalLB now, Tailscale / Cloudflare later)
 
-The script installs an in-cluster **ingress controller** (the router for the
-`<sha>.agents.*` hostnames) but deliberately sets up **no LoadBalancer** — how
-traffic reaches the cluster is yours to wire:
+The script always installs an in-cluster **ingress controller** — the router for
+the `<sha>.agents.*` hostnames. How traffic reaches that controller depends on
+whether you passed `--lb-pool`:
 
-- **Tailscale (now).** Reach the ingress over your tailnet. Either expose the
-  `ingress-nginx-controller` Service (its NodePort on a node's Tailscale IP, or
-  via the [Tailscale Kubernetes operator](https://tailscale.com/kb/1236/kubernetes-operator)),
-  and make `*.<domain>` resolve to it. If the Tailscale operator itself serves
-  ingress, run the script with `--skip-ingress` and set the ingress class
-  accordingly.
-- **Cloudflare (later).** Re-enable `cloudflared` (it's off in
-  `values-talos.yaml`), create the `ll-cloudflared-token` Secret, and point a
-  Cloudflare Tunnel at the ingress controller — the production model in the
+- **MetalLB LoadBalancer IP (this version).** With `--lb-pool`, MetalLB assigns
+  the `ingress-nginx-controller` Service an `EXTERNAL-IP` from your range
+  (`kubectl -n ingress-nginx get svc ingress-nginx-controller`). Make `*.<domain>`
+  resolve to that IP — either a wildcard record on your LAN DNS, or by using a
+  `<that-ip>.sslip.io` base as your `--domain`. That's it; the platform is
+  reachable on the LAN over port 80.
+- **NodePort (no `--lb-pool`).** ingress-nginx comes up as a NodePort Service;
+  reach it on a node IP plus the allocated nodePort.
+- **Tailscale / Cloudflare (future version).** Put your tailnet or a Cloudflare
+  Tunnel in front of the MetalLB IP. For Cloudflare, re-enable `cloudflared`
+  (off in `values-talos.yaml`), create the `ll-cloudflared-token` Secret, and
+  point a tunnel at the ingress controller — the production model in the
   repository README. Nothing else in the platform changes.
+
+> MetalLB's speaker uses host networking, so its namespace must allow privileged
+> pods. The upstream manifest labels `metallb-system` for you (and the script
+> re-applies the label defensively) — no action needed, but don't strip it.
 
 Because it's plain HTTP for now, `values-talos.yaml` uses `urlScheme: http`. Put
 TLS (Cloudflare, or cert-manager) in front of the ingress when you're ready and
