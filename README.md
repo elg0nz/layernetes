@@ -26,7 +26,7 @@ llnate plugin install
 #    from step 2 give it everything it needs
 
 # 4. Ship it to the Learning Layer cloud
-llnate login   # OAuth handshake; provisions your cloud repo and keys
+llnate login   # sign in (username/password); provisions your cloud repo and keys
 llnate keys    # encrypt your credentials (API keys, etc.)
 llnate push    # deploy — streams build/deploy progress, prints your URLs
 ```
@@ -49,7 +49,7 @@ Your credentials are readable by exactly one thing: your running agent — liter
 
 ## How it works
 
-1. **Login.** `llnate login` completes an OAuth handshake with `ll-api`, our control-plane service. `ll-api` provisions your repo on the Gitea instance in the Learning Layer cloud, generates your age keypair (storing the private half as an RBAC-guarded Kubernetes Secret), and configures your local git remote.
+1. **Login.** `llnate login` prompts for your admin-provisioned username and password in the terminal and sends them to `ll-api`, our control-plane service, which mints a Gitea personal access token — that token is the bearer for every user endpoint. (A real OAuth flow is the planned upgrade; the endpoint shapes are already OAuth-compatible — see the module docstring in `ll-api/app/main.py`.) `ll-api` provisions your repo on the Gitea instance in the Learning Layer cloud, generates your age keypair (storing the private half as an RBAC-guarded Kubernetes Secret), and configures your local git remote.
 2. **Push.** `llnate push` pushes your code to Gitea. A Gitea Actions pipeline (scaffolded by `llnate init`) builds your container image and pushes it to Gitea's built-in OCI registry.
 3. **Deploy.** The pipeline reports the new image to `ll-api`, which updates your `LLAgent` custom resource. `ll-operator` reconciles it: creates your agent's namespace and deploys the container, mounting your age key and encrypted `keys.env`. The agent entrypoint decrypts them in-memory at startup (`sops exec-env`), so plaintext secrets never exist outside the running process.
 4. **Expose.** `ll-operator` creates an Ingress for the agent with its `<sha>` hostname — the URL includes the SHA of the deployed code, so every revision has a stable, addressable URL. A shared [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (`cloudflared` running in the cluster) forwards the wildcard `*.agents.` hostname to the in-cluster ingress controller, which routes by hostname from there.
@@ -108,7 +108,7 @@ Everything `llnate` and CI talk to. Auth: `Authorization: Bearer <token>` — us
 
 | Endpoint | Auth | Purpose |
 | --- | --- | --- |
-| `POST /v1/auth/login` | none | Start OAuth flow against Gitea (localhost-callback); returns user token |
+| `POST /v1/auth/login` | none | Password login (MVP): `{"username", "password"}` → mints a Gitea personal access token and returns it as the user token. Endpoint shape is OAuth-compatible for the planned upgrade |
 | `GET /v1/me` | user | Identity + the user's age **public** key (used by `llnate keys`) |
 | `POST /v1/agents` | user | Provision: create Gitea repo, generate age keypair, create `LLAgent` shell |
 | `POST /v1/agents/{name}/builds` | CI | CI callback: `{"sha": "...", "image": "..."}` — updates `LLAgent.spec` |
