@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects/rewrites.
+# /setup serves the agent-setup instructions (a 200 rewrite, not a redirect) —
+# the landing page's CLI one-liner tells coding agents to "fetch
+# agents.wtp.io/setup", and agents.wtp.io is attached to this same Pages
+# project (see docs/cloudflare-setup.md), so both hosts serve this file.
+/setup /AGENTS-SETUP.md 200

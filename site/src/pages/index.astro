@@ -13,6 +13,48 @@ const FLOW_TEXT = [
 ].join('\n');
 
 const defaultTool = CLI_TOOLS[0];
+
+// JSON-LD structured data for the landing page (AEO: lets answer engines
+// quote what Layernetes is and how the ship flow works without executing JS).
+const appJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Layernetes',
+  alternateName: ['llnate', 'the Learning Layer cloud'],
+  url: 'https://layernetes.wtp.io',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'macOS, Linux',
+  description:
+    "Layernetes is the Learning Layer cloud for AI agents. Write a CrewAI-powered agent locally, run llnate push, and it goes live at a public URL any human or any AI can call — over MCP or plain HTTP. Secrets are sops/age-encrypted and decrypted only in memory. Members-only for now; source is AGPL-3.0-or-later.",
+  codeRepository: 'https://github.com/elg0nz/layernetes',
+  license: 'https://www.gnu.org/licenses/agpl-3.0.html',
+  datePublished: '2026-07-06',
+  author: { '@type': 'Organization', name: 'Sanscourier.ai', url: 'https://sanscourier.ai' },
+  publisher: { '@type': 'Organization', name: 'Learning Layer', url: 'https://www.learninglayer.ai/' },
+  featureList: [
+    'One-command deploys: llnate push takes local agent code to a live public URL in about a minute',
+    'Every agent is callable over MCP and plain HTTP at the same address (/mcp, POST /kickoff, /docs)',
+    'Stable, SHA-addressed URLs per revision: https://<sha>.agents.wtp.io',
+    'Secrets encrypted with sops/age into the repo, decrypted only in memory at startup',
+    'Each agent runs isolated in its own Kubernetes namespace on Learning Layer hardware',
+    'MIT-licensed CLI; platform source open under AGPL-3.0-or-later',
+    'Agent-readable setup instructions at https://layernetes.wtp.io/setup',
+  ],
+});
+
+const howToJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'How to ship an AI agent on Layernetes',
+  description: 'From local code to a live, callable agent URL in six commands.',
+  step: [
+    { '@type': 'HowToStep', position: 1, name: 'Scaffold', text: 'Run llnate init my-agent to scaffold a CrewAI agent project plus everything the cloud expects, then cd my-agent.' },
+    { '@type': 'HowToStep', position: 2, name: 'Connect your AI assistant', text: 'Run llnate plugin install to bring your AI coding assistant into the loop, then build your agent.' },
+    { '@type': 'HowToStep', position: 3, name: 'Log in', text: 'Run llnate login to claim your cloud repo and encryption keys.' },
+    { '@type': 'HowToStep', position: 4, name: 'Encrypt your keys', text: 'Run llnate keys to encrypt your API keys into the repo — only your running agent can read them.' },
+    { '@type': 'HowToStep', position: 5, name: 'Push', text: 'Run llnate push. It deploys your agent, waits until it is live, and prints its public MCP and HTTP URLs.' },
+  ],
+});
 ---
 <Base
   title="Layernetes — Your agent is ready. Give it a URL."
@@ -21,6 +63,12 @@ const defaultTool = CLI_TOOLS[0];
   accentRgb="237, 139, 58"
   page="home"
 >
+  <Fragment slot="head">
+    <meta name="keywords" content="AI agent hosting, deploy AI agents, CrewAI hosting, MCP server hosting, push to deploy agents, llnate, Layernetes, Learning Layer cloud, agent deployment platform, MCP endpoint, FastMCP, host CrewAI agent, AI agent URL, Kubernetes AI agents" />
+    <script type="application/ld+json" set:html={appJsonLd} />
+    <script type="application/ld+json" set:html={howToJsonLd} />
+  </Fragment>
+
   <header id="top" class="ll-hero" data-screen-label="Hero">
     <div class="ll-eyebrow-badge">
       <span class="ll-eyebrow-dot"></span>

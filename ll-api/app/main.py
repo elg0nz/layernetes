@@ -1,6 +1,6 @@
 """ll-api: the Layernetes control-plane FastAPI service.
 
-Auth note (MVP): the README describes ``POST /v1/auth/login`` as an OAuth
+Auth note (MVP): the eventual design for ``POST /v1/auth/login`` is an OAuth
 handshake against Gitea. The accepted MVP simplification implemented here is
 password login: the endpoint takes ``{"username", "password"}``, mints a
 Gitea personal access token via Gitea's basic-auth token API, and returns it.

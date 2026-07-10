@@ -10,6 +10,20 @@ const FLOW_TEXT = [
   'llnate keys',
   'llnate push',
 ].join('\n');
+
+const postJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: 'Introducing Layernetes: git push your AI agents',
+  description:
+    "Standing up the infrastructure to host an AI agent takes weeks. Layernetes takes one command and about a minute: your agent goes live at a public URL, ready to share, demo, or hand to Claude. Here's how it works, and how to try it.",
+  url: 'https://layernetes.wtp.io/blog/introducing-layernetes/',
+  mainEntityOfPage: 'https://layernetes.wtp.io/blog/introducing-layernetes/',
+  datePublished: '2026-07-06',
+  image: 'https://layernetes.wtp.io/og.png',
+  author: { '@type': 'Organization', name: 'The Layernetes Team', url: 'https://www.learninglayer.ai/' },
+  publisher: { '@type': 'Organization', name: 'Sanscourier.ai', url: 'https://sanscourier.ai' },
+});
 ---
 <Base
   title="Introducing Layernetes: git push your AI agents"
@@ -17,7 +31,14 @@ const FLOW_TEXT = [
   accent="#7c9bff"
   accentRgb="124, 155, 255"
   page="blog-post"
+  ogType="article"
 >
+  <Fragment slot="head">
+    <meta property="article:published_time" content="2026-07-06" />
+    <meta property="article:author" content="https://www.learninglayer.ai/" />
+    <script type="application/ld+json" set:html={postJsonLd} />
+  </Fragment>
+
   <header id="top" class="ll-article-header" data-screen-label="Article header">
     <a href="/blog/" class="ll-back-link">← Blog</a>
 

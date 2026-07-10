@@ -15,9 +15,19 @@ repo's own code (`ll-infra`) depends on to serve them.
 | --- | --- | --- |
 | `wtp.io` (apex) | SansCourier's Vercel app — unrelated to Layernetes | `sanscourier-infra` (unchanged) |
 | `layernetes.wtp.io` | The docs/blog site (`site/`, Astro Starlight) | Cloudflare Pages custom domain, `sanscourier-infra` |
+| `agents.wtp.io` (apex) | Same Pages project as `layernetes.wtp.io` — exists so `agents.wtp.io/setup` serves the agent-setup instructions (see below) | Cloudflare Pages custom domain, `sanscourier-infra` |
 | `gitea.wtp.io` | Gitea | Cloudflare Tunnel, `sanscourier-infra` |
 | `api.wtp.io` | `ll-api` | Cloudflare Tunnel, `sanscourier-infra` |
 | `*.agents.wtp.io` | Per-`<sha>` agent pods | Cloudflare Tunnel, `sanscourier-infra` |
+
+Note the wildcard `*.agents.wtp.io` does **not** cover the `agents.wtp.io`
+apex — the apex is attached to the `layernetes` Pages project as an
+additional custom domain. The site's landing page tells coding agents to
+`fetch agents.wtp.io/setup`; a Pages rewrite (`site/public/_redirects`,
+`/setup → /AGENTS-SETUP.md 200`) makes that path serve
+[`site/public/AGENTS-SETUP.md`](../site/public/AGENTS-SETUP.md) on both
+hostnames. Canonical URLs on every page point at `layernetes.wtp.io`, so the
+duplicate host doesn't split search indexing.
 
 The Pages site deploys independently via `wrangler pages deploy` (see
 `site/README.md`) — nothing in `ll-infra` depends on it. The other three

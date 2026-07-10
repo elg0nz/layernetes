@@ -9,8 +9,27 @@ interface Props {
   accent: string;
   accentRgb: string;
   page: 'home' | 'blog-index' | 'blog-post';
+  ogType?: 'website' | 'article';
 }
-const { title, description, accent, accentRgb, page } = Astro.props;
+const { title, description, accent, accentRgb, page, ogType = 'website' } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL('/og.png', Astro.site).href;
+const ogImageAlt =
+  "The Layernetes layered-stack mark and wordmark on a dark terminal-style background, with the tagline 'Your agent is ready. Give it a URL.' and the command llnate push printing a live agent URL.";
+
+// Shared Organization JSON-LD — who is behind Layernetes.
+const orgJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Layernetes',
+  url: 'https://layernetes.wtp.io',
+  logo: 'https://layernetes.wtp.io/favicon.svg',
+  sameAs: ['https://github.com/elg0nz/layernetes', 'https://sanscourier.ai', 'https://www.learninglayer.ai/'],
+  parentOrganization: { '@type': 'Organization', name: 'Sanscourier.ai', url: 'https://sanscourier.ai' },
+  description:
+    'Layernetes is the Learning Layer cloud for AI agents, built by Sanscourier.ai. Write a CrewAI-powered agent, run llnate push, and it goes live at a public URL callable over MCP or HTTP.',
+});
 
 // Background geometry differs slightly per page in the source designs (glow
 // size/position, grid/canvas mask ellipse) — everything else is shared.
@@ -49,6 +68,40 @@ const glowStyle = `top:${v.glowTop}; width:${v.glowWidth}; height:${v.glowHeight
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="author" content="Sanscourier.ai" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href={canonical} />
+  <link rel="sitemap" href="/sitemap-index.xml" />
+
+  <!-- Agent-readable doc discovery (llms.txt convention) -->
+  <link rel="alternate" type="text/plain" title="llms.txt — agent quickstart" href="https://layernetes.wtp.io/llms.txt" />
+  <link rel="alternate" type="text/plain" title="llms-full.txt — deep agent reference" href="https://layernetes.wtp.io/llms-full.txt" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content={ogType} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:site_name" content="Layernetes" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={ogImageAlt} />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+  <meta name="twitter:image:alt" content={ogImageAlt} />
+  <meta name="twitter:site" content="@sanscourier" />
+  <meta name="twitter:creator" content="@sanscourier" />
+
+  <script type="application/ld+json" set:html={orgJsonLd} />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
