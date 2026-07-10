@@ -114,16 +114,35 @@ def test_service_shape():
 
 def test_ingress_shape():
     host = builders.agent_hostname(SHA, DOMAIN)
-    ing = builders.build_ingress(CR_NAME, NS, host, "nginx")
+    ing = builders.build_ingress(CR_NAME, NS, [host], "nginx")
     assert ing["metadata"]["name"] == "agent"
     assert ing["spec"]["ingressClassName"] == "nginx"
     rules = ing["spec"]["rules"]
-    assert len(rules) == 1  # only the latest revision resolves (MVP)
+    assert len(rules) == 1  # one host in -> one rule out
     assert rules[0]["host"] == "3f2a91c.agents.layernetes.learninglayer.ai"
     path = rules[0]["http"]["paths"][0]
     assert path["path"] == "/"
     assert path["pathType"] == "Prefix"
     assert path["backend"]["service"] == {"name": "agent", "port": {"number": 8000}}
+
+
+def test_ingress_multi_host():
+    # One revision, reachable on several domains (sslip.io admin name + a
+    # public wtp.io name): one rule per host, same backend, same <sha>.
+    hosts = [
+        builders.agent_hostname(SHA, "agents.layernetes.learninglayer.ai"),
+        builders.agent_hostname(SHA, "agents.wtp.io"),
+    ]
+    ing = builders.build_ingress(CR_NAME, NS, hosts, "nginx")
+    rules = ing["spec"]["rules"]
+    assert [r["host"] for r in rules] == [
+        "3f2a91c.agents.layernetes.learninglayer.ai",
+        "3f2a91c.agents.wtp.io",
+    ]
+    backends = {
+        r["http"]["paths"][0]["backend"]["service"]["name"] for r in rules
+    }
+    assert backends == {"agent"}  # same Service for every host
 
 
 def test_network_policy():

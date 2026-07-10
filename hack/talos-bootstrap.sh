@@ -28,7 +28,11 @@
 # Flags: --lb-pool "192.168.1.240-192.168.1.250" (enable MetalLB + a LB IP) ·
 # --namespace NS (default layernetes) · --release NAME (default layernetes) ·
 # --skip-storage · --skip-ingress · --skip-images (point the values at prebuilt
-# images instead) · --yes (don't prompt on the k8s context).
+# images instead) · --yes (don't prompt on the k8s context) ·
+# --values-extra FILE (an extra `-f` overlay layered on top of values-talos.yaml,
+# after it and the secret file so it wins — e.g. ll-infra/values-wtp.yaml to
+# turn on cloudflared and the wtp.io dual hostnames. host_sets() --set flags
+# still take precedence, so the canonical sslip.io hostnames stay intact).
 set -euo pipefail
 
 # ── config / flags ───────────────────────────────────────────────────────────
@@ -42,6 +46,7 @@ NAMESPACE="layernetes"
 RELEASE="layernetes"
 USERS=""
 LB_POOL="" # e.g. "192.168.1.240-192.168.1.250"; set → install MetalLB + a LB IP
+VALUES_EXTRA="" # optional extra -f overlay layered on top of values-talos.yaml
 ADMIN_USER="${GITEA_ADMIN_USER:-layernetes-admin}"
 INGRESS_CLASS="nginx"
 SKIP_STORAGE=0 SKIP_INGRESS=0 SKIP_IMAGES=0 ASSUME_YES=0
@@ -61,6 +66,7 @@ while [ $# -gt 0 ]; do
     --release) RELEASE="$2"; shift 2 ;;
     --users) USERS="$2"; shift 2 ;;
     --lb-pool) LB_POOL="$2"; shift 2 ;;
+    --values-extra) VALUES_EXTRA="$2"; shift 2 ;;
     --ingress-class) INGRESS_CLASS="$2"; shift 2 ;;
     --skip-storage) SKIP_STORAGE=1; shift ;;
     --skip-ingress) SKIP_INGRESS=1; shift ;;
@@ -86,6 +92,7 @@ log "Phase 0 · preflight"
 for bin in kubectl helm openssl; do command -v "$bin" >/dev/null || die "missing required tool: $bin"; done
 [ "$SKIP_IMAGES" = 1 ] || command -v docker >/dev/null || die "docker is required to build/push platform images (or pass --skip-images)"
 [ -n "$DOMAIN" ] || die "pass --domain <your-domain> (e.g. layernetes.example.com or 100.x.y.z.sslip.io)"
+[ -z "$VALUES_EXTRA" ] || [ -f "$VALUES_EXTRA" ] || die "--values-extra file not found: $VALUES_EXTRA"
 
 CTX=$(kubectl config current-context) || die "no current kubectl context"
 info "kubectl context : $CTX"
@@ -220,9 +227,15 @@ host_sets() {
 }
 read -r -a HOST_SETS <<< "$(host_sets | tr '\n' ' ')"
 
+# An optional overlay goes after the base + secret files (so it wins on deep
+# merge) but the HOST_SETS --set flags still beat any -f, keeping the canonical
+# --domain hostnames intact regardless of what the overlay adds.
+EXTRA_VALUES_ARGS=()
+[ -n "$VALUES_EXTRA" ] && EXTRA_VALUES_ARGS=(-f "$VALUES_EXTRA")
+
 helm_install() { # extra --set args passed as "$@"
   helm upgrade --install "$RELEASE" "$CHART" -n "$NAMESPACE" --create-namespace \
-    -f "$VALUES" -f "$SECRET_VALUES" "${HOST_SETS[@]}" "$@"
+    -f "$VALUES" -f "$SECRET_VALUES" "${EXTRA_VALUES_ARGS[@]}" "${HOST_SETS[@]}" "$@"
 }
 
 # ── 5. Gitea first ───────────────────────────────────────────────────────────

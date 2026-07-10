@@ -48,7 +48,10 @@ class Config:
     """Environment injected by the ll-infra chart (ll-operator deployment)."""
 
     platform_namespace: str
-    agents_domain: str
+    # Every domain the agent should answer on. The first is canonical (used for
+    # status.url); the rest just need their Ingress rule to resolve. One agent
+    # ingress gets one rule per domain (all for the current revision's sha).
+    agents_domains: tuple[str, ...]
     url_scheme: str
     url_port_suffix: str
     ingress_class_name: str
@@ -66,7 +69,13 @@ class Config:
         )
         return cls(
             platform_namespace=environ.get("PLATFORM_NAMESPACE", "layernetes"),
-            agents_domain=environ.get("AGENTS_DOMAIN", "agents.127.0.0.1.sslip.io"),
+            agents_domains=tuple(
+                d.strip()
+                for d in environ.get(
+                    "AGENTS_DOMAINS", "agents.127.0.0.1.sslip.io"
+                ).split(",")
+                if d.strip()
+            ),
             url_scheme=environ.get("AGENT_URL_SCHEME", "http"),
             url_port_suffix=environ.get("AGENT_URL_PORT_SUFFIX", ""),
             ingress_class_name=environ.get("INGRESS_CLASS_NAME", "nginx"),
@@ -136,14 +145,14 @@ def _apply_agent_resources(name: str, spec: dict, cfg: Config, logger) -> None:
         )
     )
     k8s.apply_service(builders.build_service(name, namespace))
-    host = builders.agent_hostname(sha, cfg.agents_domain)
-    k8s.apply_ingress(builders.build_ingress(name, namespace, host, cfg.ingress_class_name))
+    hosts = [builders.agent_hostname(sha, domain) for domain in cfg.agents_domains]
+    k8s.apply_ingress(builders.build_ingress(name, namespace, hosts, cfg.ingress_class_name))
     k8s.apply_network_policy(
         builders.build_network_policy(
             name, namespace, list(cfg.ingress_controller_namespaces)
         )
     )
-    logger.info("applied resources for %s (sha=%s, host=%s)", name, sha, host)
+    logger.info("applied resources for %s (sha=%s, hosts=%s)", name, sha, hosts)
 
 
 @kopf.on.create(GROUP, VERSION, PLURAL)
@@ -180,7 +189,7 @@ def reconcile(name, spec, patch, logger, **_):
         builders.compute_status(
             spec,
             deployment_status,
-            cfg.agents_domain,
+            cfg.agents_domains[0],
             cfg.url_scheme,
             cfg.url_port_suffix,
         ),
@@ -216,7 +225,7 @@ def monitor(name, spec, status, patch, logger, **_):
         desired = builders.compute_status(
             spec,
             deployment_status,
-            cfg.agents_domain,
+            cfg.agents_domains[0],
             cfg.url_scheme,
             cfg.url_port_suffix,
         )

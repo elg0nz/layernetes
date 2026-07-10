@@ -12,7 +12,9 @@ spec:
   ingressClassName: {{ . }}
   {{- end }}
   rules:
-    - host: {{ .Values.global.hosts.api }}
+    {{- /* Canonical host plus any extraHosts.api, one rule each, same backend. */}}
+    {{- range prepend (.Values.global.extraHosts.api | default list) .Values.global.hosts.api }}
+    - host: {{ . }}
       http:
         paths:
           - path: /
@@ -22,4 +24,5 @@ spec:
                 name: ll-api
                 port:
                   name: http
+    {{- end }}
 {{- end }}

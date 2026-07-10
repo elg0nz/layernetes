@@ -13,7 +13,7 @@ LOGGER = logging.getLogger("test")
 
 ENV = {
     "PLATFORM_NAMESPACE": "layernetes",
-    "AGENTS_DOMAIN": "agents.layernetes.learninglayer.ai",
+    "AGENTS_DOMAINS": "agents.layernetes.learninglayer.ai",
     "AGENT_URL_SCHEME": "https",
     "AGENT_URL_PORT_SUFFIX": "",
     "INGRESS_CLASS_NAME": "nginx",
@@ -56,8 +56,15 @@ def fake_k8s(monkeypatch):
 def test_config_from_env():
     cfg = main.Config.from_env()
     assert cfg.platform_namespace == "layernetes"
-    assert cfg.agents_domain == "agents.layernetes.learninglayer.ai"
+    assert cfg.agents_domains == ("agents.layernetes.learninglayer.ai",)
     assert cfg.ingress_controller_namespaces == ("ingress-nginx", "kube-system")
+
+
+def test_config_parses_multiple_agents_domains(monkeypatch):
+    # Comma-separated, whitespace-tolerant; first is canonical (status.url).
+    monkeypatch.setenv("AGENTS_DOMAINS", "agents.sslip.io, agents.wtp.io")
+    cfg = main.Config.from_env()
+    assert cfg.agents_domains == ("agents.sslip.io", "agents.wtp.io")
 
 
 def test_shell_cr_goes_pending_and_touches_nothing(fake_k8s):

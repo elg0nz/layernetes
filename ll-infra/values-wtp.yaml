@@ -1,0 +1,58 @@
+# wtp.io overlay — public Cloudflare Tunnel access, additive on top of the
+# Tailscale/sslip.io setup that values-talos.yaml already brings up.
+#
+#   ./hack/talos-bootstrap.sh --domain 192.168.10.240.sslip.io \
+#     --lb-pool 192.168.10.240-192.168.10.250 \
+#     --values-extra ll-infra/values-wtp.yaml --yes
+#
+# This layers AFTER values-talos.yaml (and its secret file), so it wins on deep
+# merge; the bootstrap script's host_sets() `--set` flags still take precedence
+# over any `-f`, so the canonical sslip.io hostnames derived from --domain stay
+# intact. Everything here is purely additive: a second public hostname per
+# service plus the in-cluster cloudflared connector.
+#
+# ── Prerequisite (not created by this file) ──────────────────────────────────
+# The connector needs the tunnel token as a Secret in the platform namespace:
+#
+#   op run --env-file=op.env -- tofu output -raw wtp_tunnel_token   # sanscourier-infra/terraform
+#   kubectl -n layernetes create secret generic ll-cloudflared-token \
+#     --from-literal=token=<that token>
+#
+# The tunnel, its public-hostname routes (api./gitea./*.agents.wtp.io → the
+# in-cluster ingress-nginx origin, 404 catch-all last), and the proxied DNS all
+# live in the private sanscourier-infra repo — see docs/cloudflare-setup.md.
+
+# Run the connector in-cluster. It reads the token from the Secret above.
+cloudflared:
+  enabled: true
+  existingSecret: ll-cloudflared-token
+
+global:
+  # ll-api answers on api.wtp.io in addition to the canonical api.<domain>.
+  extraHosts:
+    api:
+      - api.wtp.io
+
+llOperator:
+  # Every deployed agent gets a second Ingress rule on <sha>.agents.wtp.io
+  # alongside the canonical <sha>.agents.<domain>. The canonical (sslip.io) one
+  # stays the agent's reported status.url.
+  extraAgentsDomains:
+    - agents.wtp.io
+
+# Gitea's subchart consumes its hosts list directly, so the second public
+# hostname is appended here. This whole list REPLACES values-talos.yaml's
+# single-host list (helm doesn't merge list items across -f files); host_sets()
+# then overrides [0].host with the real --domain value, so keep [0] as the
+# sslip.io entry and [1] as the public wtp.io one.
+gitea:
+  ingress:
+    hosts:
+      - host: gitea.192.168.10.240.sslip.io # overridden by host_sets() to gitea.<domain>
+        paths:
+          - path: /
+            pathType: Prefix
+      - host: gitea.wtp.io
+        paths:
+          - path: /
+            pathType: Prefix

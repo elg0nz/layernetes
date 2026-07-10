@@ -192,10 +192,15 @@ def build_service(cr_name: str, namespace: str) -> dict:
     }
 
 
-def build_ingress(cr_name: str, namespace: str, host: str, ingress_class_name: str) -> dict:
-    """One rule for the current revision only: on sha change the whole rules
-    list is replaced (server-side apply), so old <sha> hostnames stop
-    resolving — the MVP revision semantics."""
+def build_ingress(
+    cr_name: str, namespace: str, hosts: list[str], ingress_class_name: str
+) -> dict:
+    """One rule per host, all for the current revision (its <sha> subdomain on
+    each configured agents domain). On sha change the whole rules list is
+    replaced (server-side apply), so old <sha> hostnames stop resolving — the
+    MVP revision semantics. Multiple hosts is one revision reachable on several
+    domains (e.g. the sslip.io admin name and a public wtp.io name), not
+    revision history."""
     return {
         "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
@@ -224,6 +229,7 @@ def build_ingress(cr_name: str, namespace: str, host: str, ingress_class_name: s
                         ]
                     },
                 }
+                for host in hosts
             ],
         },
     }

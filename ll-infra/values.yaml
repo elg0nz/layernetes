@@ -9,6 +9,14 @@ global:
     gitea: gitea.layernetes.learninglayer.ai
     api: api.layernetes.learninglayer.ai
     agents: agents.layernetes.learninglayer.ai
+  # Additional hostnames each service answers on, on top of the canonical
+  # `hosts` above. Lets one service front two access channels at once — e.g.
+  # the sslip.io admin name over Tailscale plus a public wtp.io name over the
+  # Cloudflare Tunnel. The canonical `hosts.*` stays the one used for printed
+  # URLs / ROOT_URL / status.url; these extras only need their Ingress rule to
+  # resolve. Gitea's own hosts live in `gitea.ingress.hosts` (subchart-native).
+  extraHosts:
+    api: []
   # Scheme and optional port suffix (e.g. ":8080" behind a local
   # port-forward) used when constructing externally reachable URLs.
   urlScheme: https
@@ -53,6 +61,12 @@ llOperator:
     repository: gitea.layernetes.learninglayer.ai/layernetes/ll-operator
     tag: latest
     pullPolicy: IfNotPresent
+  # Extra agents domains, on top of global.hosts.agents. The operator gives
+  # each deployed agent one Ingress rule per domain (all on the current
+  # revision's <sha> subdomain), so an agent is reachable on both the
+  # canonical sslip.io name and, here, a public wtp.io name. The first domain
+  # (global.hosts.agents) stays canonical for the agent's status.url.
+  extraAgentsDomains: []
   resources:
     requests:
       cpu: 50m

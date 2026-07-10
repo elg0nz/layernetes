@@ -30,8 +30,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: AGENTS_DOMAIN
-              value: {{ .Values.global.hosts.agents | quote }}
+            {{- /* Canonical agents domain first (it's the one used for status.url),
+                   then any extras. Comma-separated; the operator splits it. */}}
+            - name: AGENTS_DOMAINS
+              value: {{ join "," (prepend (.Values.llOperator.extraAgentsDomains | default list) .Values.global.hosts.agents) | quote }}
             - name: AGENT_URL_SCHEME
               value: {{ .Values.global.urlScheme | quote }}
             - name: AGENT_URL_PORT_SUFFIX
