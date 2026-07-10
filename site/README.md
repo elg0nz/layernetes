@@ -75,11 +75,13 @@ Requires being logged in (`npx wrangler login`) or having
 `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` set in your shell. `--branch=main`
 forces a production deploy — omitting it lands on a preview URL instead.
 
-### Custom domain (optional follow-up)
+### Custom domain
 
-To serve at e.g. `layernetes.learninglayer.ai`: in the Pages project → *Custom
-domains*, add the hostname and follow the DNS prompt. Then update `site` in
-`astro.config.mjs` to that URL so canonical links, sitemap, and RSS are correct.
+The site serves at `layernetes.wtp.io`. The custom domain, and the DNS record
+behind it, are provisioned as code in the private `sanscourier-infra` repo —
+not in this repo, and not via the Pages dashboard. See
+[`docs/cloudflare-setup.md`](../docs/cloudflare-setup.md) for the domain
+layout. `site` in `astro.config.mjs` already points at it.
 
 > Note: Cloudflare now steers new static sites toward **Workers static assets**
 > rather than Pages. Pages remains fully supported and is the simplest path for

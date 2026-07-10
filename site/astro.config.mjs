@@ -5,9 +5,10 @@ import starlightBlog from 'starlight-blog';
 
 // https://astro.build/config
 export default defineConfig({
-  // Public URL of the deployed site. Update to the custom domain once it is
-  // wired up in Cloudflare Pages (e.g. https://layernetes.learninglayer.ai).
-  site: 'https://layernetes.pages.dev',
+  // Public URL of the deployed site — the layernetes.wtp.io custom domain,
+  // provisioned in the private sanscourier-infra repo (see
+  // docs/cloudflare-setup.md).
+  site: 'https://layernetes.wtp.io',
   integrations: [
     starlight({
       title: 'Layernetes',
