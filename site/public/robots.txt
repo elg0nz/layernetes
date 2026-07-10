@@ -1,0 +1,79 @@
+# Layernetes — open to crawlers, especially AI ones.
+# Layernetes hosts AI agents that are *called by* AI agents; we want AI search
+# engines (Perplexity, ChatGPT search, Claude, Gemini, You) to index us.
+
+# Content Signals (https://contentsignals.org/) — declare AI usage preferences.
+# Layernetes is built for AI agents, so we opt in to all three signals.
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+
+User-agent: *
+Allow: /
+
+# Generative-engine crawlers (AI search / RAG indexing)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Bingbot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+# Agent-readable docs (llms.txt convention) — make these explicit.
+# Some crawlers honor Allow over default-allow, some don't; harmless either way.
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /sitemap-index.xml
+
+Sitemap: https://layernetes.wtp.io/sitemap-index.xml

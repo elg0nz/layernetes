@@ -1,0 +1,210 @@
+# Layernetes — deep agent reference
+
+> The full technical reference for Layernetes: architecture, the four frozen
+> contracts, the secrets pipeline, and the developer loop. Read
+> https://layernetes.wtp.io/llms.txt first for the quickstart playbook; read
+> this when you need exact endpoint shapes, the runtime contract, or to reason
+> about how the platform works. Source of truth: the README at
+> https://github.com/elg0nz/layernetes.
+
+## What it is
+
+Layernetes is a platform for building, shipping, and hosting
+CrewAI-powered AI agents on the Learning Layer cloud — a Kubernetes platform
+running on Talos Linux. A developer writes an agent locally and `llnate push`
+deploys it to a sandboxed, per-namespace pod with a public URL callable over
+MCP or plain HTTP.
+
+- Developed by Sanscourier.ai (https://sanscourier.ai), licensed to Learning
+  Layer (https://www.learninglayer.ai/) for the Learning Layer cloud.
+- Source: https://github.com/elg0nz/layernetes, AGPL-3.0-or-later. Commercial
+  licensing: business@sanscourier.ai.
+- Hosted service is members-only (Learning Layer AI floor via
+  https://frontiertower.io); the platform itself can be self-hosted on any
+  Kubernetes cluster.
+
+## The developer loop
+
+```sh
+llnate init my-agent      # scaffold: CrewAI project + Dockerfile + CI workflow + AGENTS.md
+cd my-agent
+llnate plugin install     # AI coding hooks (CrewAI "Build with AI" setup)
+# ... build the agent with your coding assistant ...
+llnate login              # terminal username/password prompt; provisions cloud repo + age keys
+llnate keys               # encrypt credentials into committed keys.env
+llnate push               # deploy — streams progress, prints MCP + HTTP URLs
+llnate delete             # teardown: agent, namespace, repo
+```
+
+`llnate push` blocks until the agent is live, then prints its public URLs.
+It polls `GET /v1/agents/{name}/status` every 2s and waits until the reported
+`sha` matches the one it pushed, so a stale Failed/Ready status from the prior
+revision can't end the poll early.
+
+## What happens on push (pipeline)
+
+1. **Login.** `llnate login` prompts for the user's admin-provisioned
+   username/password in the terminal and sends them to `ll-api` (the
+   control-plane service), which mints a Gitea personal access token — that
+   token is the bearer for every user endpoint. (A real OAuth flow is the
+   planned upgrade; the endpoint shapes are already OAuth-compatible.)
+   `ll-api` provisions the user's repo on the in-cluster Gitea instance,
+   generates their age keypair (private half stored as an RBAC-guarded
+   Kubernetes Secret), and configures the local git remote.
+2. **Push.** `llnate push` pushes code to Gitea. A Gitea Actions pipeline
+   (scaffolded by `llnate init`) builds the container image and pushes it to
+   Gitea's built-in OCI registry.
+3. **Deploy.** The pipeline reports the new image to `ll-api`, which updates
+   the `LLAgent` custom resource. `ll-operator` reconciles it: creates the
+   agent's namespace, deploys the container, and mounts the age key plus the
+   still-encrypted `keys.env`.
+4. **Expose.** `ll-operator` creates an Ingress with the `<sha>` hostname. A
+   shared Cloudflare Tunnel (`cloudflared` in-cluster) forwards the wildcard
+   `*.agents.` hostname to the in-cluster ingress controller, which routes by
+   hostname.
+5. **Serve.** Clients reach the agent via MCP (FastMCP) or HTTP (FastAPI) at
+   `https://<sha>.agents.wtp.io`.
+
+Isolation: every agent runs in its own Kubernetes namespace (restricted
+permissions, network policies), and cluster nodes run on Cloud Hypervisor VMs,
+separating agent workloads from the host.
+
+**Revision semantics (MVP):** only the latest revision runs. A new `spec.sha`
+replaces the agent's Deployment and Ingress; previous `<sha>` hostnames stop
+resolving. Revision history and rollback are post-MVP.
+
+## Secrets pipeline (sops + age)
+
+1. `llnate login` issues an age public key, e.g.
+   `age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p`.
+2. `llnate keys` encrypts credentials with that key into a `keys.env` file
+   committed alongside the code — ciphertext, safe in git.
+3. The matching private key is a Kubernetes Secret in the cloud, guarded by
+   RBAC and encrypted at rest (Talos-native etcd encryption).
+4. At deploy time `ll-operator` mounts the age key (at
+   `/var/run/secrets/llnate/age.key`) and the encrypted `keys.env` into the
+   agent's pod. The entrypoint runs `sops exec-env keys.env` at startup, so
+   plaintext credentials exist only in process memory — never on disk, never
+   in etcd, never in a rendered Secret.
+
+Credentials are readable by exactly one thing: the running agent. (Vault is
+the planned upgrade path for audit logging and key rotation.)
+
+## The four frozen contracts
+
+These are the seams between packages, frozen for the MVP.
+
+### 1. The `LLAgent` custom resource
+
+Written by `ll-api`, reconciled by `ll-operator`:
+
+```yaml
+apiVersion: layernetes.learninglayer.ai/v1alpha1
+kind: LLAgent
+metadata:
+  name: gonz-hello-agent          # <owner>-<agent>, unique cluster-wide
+  namespace: layernetes           # CRs live in the platform namespace
+spec:
+  owner: gonz                     # Gitea username
+  repo: gonz/hello-agent          # Gitea repo
+  image: gitea.../gonz/hello-agent:3f2a91c
+  sha: 3f2a91c                    # short SHA; becomes the hostname
+  keySecretRef: age-key-gonz      # Secret holding the age private key
+status:
+  phase: Pending | Deploying | Ready | Failed
+  url: https://3f2a91c.agents.…
+  message: ""                     # human-readable detail on Failed
+```
+
+### 2. `ll-api` REST API
+
+Everything `llnate` and CI talk to. Auth: `Authorization: Bearer <token>` —
+user tokens issued at login, repo-scoped tokens injected into CI at
+provisioning time.
+
+| Endpoint | Auth | Purpose |
+| --- | --- | --- |
+| `POST /v1/auth/login` | none | Password login (MVP): takes `{"username", "password"}`, mints a Gitea personal access token, and returns it — that token is the bearer for every user endpoint. Endpoint shape is OAuth-compatible for the planned real OAuth upgrade |
+| `GET /v1/me` | user | Identity + the user's age public key (used by `llnate keys`) |
+| `POST /v1/agents` | user | Provision: create Gitea repo, generate age keypair, create `LLAgent` shell |
+| `POST /v1/agents/{name}/builds` | CI | CI callback: `{"sha": "...", "image": "..."}` — updates `LLAgent.spec` |
+| `GET /v1/agents/{name}/status` | user | `{"phase", "url", "message", "sha"}` — polled by `llnate push` |
+| `DELETE /v1/agents/{name}` | user | Teardown: delete `LLAgent`, namespace, Gitea repo (backs `llnate delete`) |
+
+### 3. Agent runtime contract
+
+What every deployed agent container exposes — guaranteed by the `llnate init`
+template and the `llagent-base` image:
+
+- **Port `8000`**, plain HTTP (fronted by ingress + TLS in the cloud).
+- **`GET /healthz`** — liveness/readiness; the operator gates `Ready` on it.
+- **`/mcp`** — the FastMCP server. Any MCP client can attach:
+  `claude mcp add --transport http my-agent https://<sha>.agents.wtp.io/mcp`
+- **`/docs` + REST routes** (e.g. `POST /kickoff`) — the FastAPI surface.
+- **User code convention:** the project exposes a CrewAI `crew` object in
+  `crew.py`; the base image's entrypoint imports it and mounts it behind
+  FastMCP and FastAPI. Don't write a custom server.
+- **Startup:** the entrypoint runs `sops exec-env keys.env` so decrypted
+  credentials exist only in process memory.
+
+### 4. CI → `ll-api` callback
+
+The Gitea Actions workflow builds the image, pushes it to the OCI registry,
+then reports:
+
+```
+POST /v1/agents/{name}/builds
+Authorization: Bearer <repo-scoped token, injected at provisioning>
+{"sha": "3f2a91c", "image": "gitea.../gonz/hello-agent:3f2a91c"}
+```
+
+That call is the only coupling between CI and the platform — the pipeline
+knows nothing about Kubernetes.
+
+## Repository layout
+
+| Package | Stack | Description |
+| --- | --- | --- |
+| `llnate` | Python + Typer | Developer CLI: `init`, `plugin install`, `login`, `keys`, `push`, `delete` |
+| `ll-api` | Python + FastAPI | Control-plane API: login, Gitea provisioning, age keypair issuance, deploy status |
+| `ll-operator` | Python + kopf | K8s operator reconciling `LLAgent` CRs into namespaces, secrets, deployments, ingresses |
+| `llagent-base` | Docker | Base image for all agents: Python, pinned CrewAI, FastMCP/FastAPI wrapper, sops/age, entrypoint |
+| `ll-infra` | Helm | Platform charts: Gitea (git + Actions + OCI registry), `ll-api`, `ll-operator`, `cloudflared` |
+| `ll-tofu` | OpenTofu | Cloudflare edge: tunnel, Access, Pages |
+
+Python everywhere, on purpose: one language across CLI, control plane, and
+operator means shared pydantic models and no context switching.
+
+## Self-hosting / local development
+
+The entire platform — Gitea, `ll-api`, `ll-operator`, and deployed agents —
+runs on any Kubernetes cluster, including a laptop. macOS with kiac is the
+preferred local setup; Colima, k3s, and kind also work. The local flow is the
+production flow: install the `ll-infra` Helm chart with
+`values-local.yaml`, point `LLNATE_API_URL` at the local `ll-api`, and run the
+same `llnate init/login/keys/push` loop. Local hostnames use sslip.io so no
+/etc/hosts edits are needed. Full instructions and troubleshooting:
+https://github.com/elg0nz/layernetes#developing-locally.
+
+Production runs on Talos Linux (https://www.talos.dev/) with nodes on Cloud
+Hypervisor VMs — see docs/TALOS.md in the repo.
+
+## License
+
+Copyright © 2026 Sanscourier.ai. Source released under AGPL-3.0-or-later: you
+may use, study, modify, and redistribute Layernetes, but if you run a modified
+version as a network service you must offer its source to that service's
+users. Sanscourier.ai retains the exclusive right to offer alternative
+commercial terms (business@sanscourier.ai). Contributions are accepted by
+application only.
+
+## Links
+
+- Site: https://layernetes.wtp.io
+- Agent quickstart: https://layernetes.wtp.io/llms.txt
+- Introduction: https://layernetes.wtp.io/blog/introducing-layernetes/
+- Quick reference: https://layernetes.wtp.io/overview/
+- Source: https://github.com/elg0nz/layernetes
+- CrewAI: https://github.com/crewAIInc/crewAI
+- FastMCP: https://github.com/jlowin/fastmcp · FastAPI: https://fastapi.tiangolo.com/
+- sops: https://github.com/getsops/sops · age: https://github.com/FiloSottile/age
