@@ -33,7 +33,21 @@ global:
     api:
       - api.wtp.io
 
+# Force a fresh image pull on every rollout. The platform images are pushed as
+# the floating `:latest` tag (see docs / the bootstrap script), so the chart
+# default `IfNotPresent` will silently keep running a node's stale cached
+# `:latest` after a rebuild — a `helm upgrade` or `rollout restart` then rolls a
+# new pod that STILL runs old code. `Always` makes rebuild-then-redeploy honest.
+# (The real fix is SHA-tagged platform images — a separate queued task; drop
+# these two once that lands.) This is the overlay that accompanies a platform
+# image rebuild, so it's the right place for it.
+llApi:
+  image:
+    pullPolicy: Always
+
 llOperator:
+  image:
+    pullPolicy: Always
   # Every deployed agent gets a second Ingress rule on <sha>.agents.wtp.io
   # alongside the canonical <sha>.agents.<domain>. The canonical (sslip.io) one
   # stays the agent's reported status.url.
