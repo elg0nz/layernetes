@@ -1,0 +1,25 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  current: 'home' | 'blog-index' | 'blog-post';
+}
+const { current } = Astro.props;
+const blogHref = current === 'blog-index' ? '#top' : '/blog/';
+---
+<footer class="ll-footer" data-screen-label="Footer">
+  <div class="ll-footer-top">
+    <div class="ll-footer-brand">
+      <Logo size={22} minimal />
+      <span class="ll-footer-tag">The Learning Layer cloud for AI agents.</span>
+    </div>
+    <div class="ll-footer-links">
+      <a href="https://github.com/elg0nz/layernetes" class="ll-footer-link">GitHub</a>
+      <a href={blogHref} class="ll-footer-link">Blog</a>
+      <a href="/blog/rss.xml" class="ll-footer-link">RSS</a>
+    </div>
+  </div>
+  <div class="ll-footer-bottom">
+    Built by <a href="https://sanscourier.ai">Sanscourier.ai</a> for <a href="https://www.learninglayer.ai/">Learning Layer</a>. © 2026.
+  </div>
+</footer>

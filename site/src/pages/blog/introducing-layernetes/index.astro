@@ -1,0 +1,135 @@
+---
+import Base from '../../../layouts/Base.astro';
+import CopyIcon from '../../../components/CopyIcon.astro';
+
+const FLOW_TEXT = [
+  'llnate init my-agent',
+  'cd my-agent',
+  'llnate plugin install',
+  'llnate login',
+  'llnate keys',
+  'llnate push',
+].join('\n');
+---
+<Base
+  title="Introducing Layernetes: git push your AI agents"
+  description="Standing up the infrastructure to host an AI agent takes weeks. Layernetes takes one command and about a minute: your agent goes live at a public URL, ready to share, demo, or hand to Claude. Here's how it works, and how to try it."
+  accent="#7c9bff"
+  accentRgb="124, 155, 255"
+  page="blog-post"
+>
+  <header id="top" class="ll-article-header" data-screen-label="Article header">
+    <a href="/blog/" class="ll-back-link">← Blog</a>
+
+    <div class="ll-meta" style="margin-top: 30px;">
+      <span class="ll-badge">Announcement</span>
+      <span class="ll-meta-dim">Jul 6, 2026</span>
+      <span class="ll-meta-sep">·</span>
+      <a href="https://www.learninglayer.ai/" class="ll-meta-mid">The Layernetes Team</a>
+      <span class="ll-meta-sep">·</span>
+      <span class="ll-meta-dim">6 min read</span>
+    </div>
+
+    <h1 class="ll-article-title">
+      Introducing Layernetes: <span class="ll-featured-mono">git&nbsp;push</span> your AI agents
+    </h1>
+  </header>
+
+  <div class="ll-toc-wrap">
+    <nav class="ll-toc">
+      <div class="ll-toc-eyebrow">// on this page</div>
+      <div class="ll-toc-list">
+        <a href="#s1" class="ll-toc-link">01 · From an idea to a link you can share</a>
+        <a href="#s2" class="ll-toc-link">02 · What a live agent gets you</a>
+        <a href="#s3" class="ll-toc-link">03 · What happens when you push</a>
+        <a href="#s4" class="ll-toc-link">04 · Try it</a>
+      </div>
+    </nav>
+  </div>
+
+  <article class="ll-article" data-screen-label="Article">
+    <p>You built an agent. It works. It runs on your laptop, which is exactly where no one else can use it.</p>
+
+    <p>That's the wall everyone hits. Building the agent got easy; your coding assistant does most of the typing now. Getting it in front of anyone else is the part that still eats your calendar. Do it yourself and you're wiring up a container, a server, secrets that can't live in your repo, a domain, and TLS, then gluing it all together. Call it a week if you know exactly what you're doing. A month if you're learning it as you go. And you get to do it again for the next agent.</p>
+
+    <p>Layernetes collapses all of that into one command. You write your agent, run it, and about a minute later it's live on the internet at its own address.</p>
+
+    <div class="ll-inline-cmd">
+      <span class="tk-dim">$</span><span class="tk-fg">llnate</span><span class="tk-green">push</span>
+    </div>
+
+    <p><code>push</code> prints a public URL. Send it to a friend, drop it in a channel, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.</p>
+
+    <p class="ll-lede">Weeks of infrastructure, or one command. That's the whole pitch.</p>
+
+    <h2 id="s1" class="ll-h2"><span class="ll-h2-num">01</span>From an idea to a link you can share</h2>
+
+    <p>Here's the whole path, start to finish:</p>
+
+    <div class="ll-term" style="margin-top: 22px;">
+      <div class="ll-term-bar">
+        <span class="ll-term-dot red"></span>
+        <span class="ll-term-dot yellow"></span>
+        <span class="ll-term-dot green"></span>
+        <span class="ll-term-title">my-agent · zsh</span>
+        <button class="ll-term-copy" aria-label="Copy commands" type="button" data-copy={FLOW_TEXT}>
+          <CopyIcon size={14} />
+          <span data-copy-label hidden class="ll-copied">copied</span>
+        </button>
+      </div>
+      <div class="ll-term-body"><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">init</span> <span class="tk-muted">my-agent</span>   <span class="tk-comment"># start a new agent project</span></div><div><span class="tk-dim">$ </span><span class="tk-fg">cd</span> <span class="tk-muted">my-agent</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">plugin install</span>   <span class="tk-comment"># bring your AI coding assistant into the loop</span></div><div><span class="tk-comment"># ... build your agent, the way you build everything now ...</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">login</span>   <span class="tk-comment"># sign in to the cloud</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">keys</span>   <span class="tk-comment"># add your API keys, encrypted</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-green">push</span>   <span class="tk-comment"># ship it, get your URL</span></div></div>
+    </div>
+
+    <p>You spend your time on the middle line, building the agent. Everything around it is one word each. Your agent needs API keys to do its job; <code>llnate keys</code> encrypts them so they're safe to keep in your project, and only your running agent can ever read them. You never paste a secret into a dashboard.</p>
+
+    <p>When <code>push</code> finishes, it hands you the link:</p>
+
+    <div class="ll-link-box">
+      <div class="ll-link-box-label">Agent is live:</div>
+      <div class="ll-link-box-url">https://3f2a91c.agents.wtp.io<span class="ll-cursor">▋</span></div>
+    </div>
+
+    <p>That link is real, public, and yours.</p>
+
+    <h2 id="s2" class="ll-h2"><span class="ll-h2-num">02</span>What a live agent gets you</h2>
+
+    <p>A URL changes what your agent is. On your laptop it's a script only you can run. Live, it's something other people and other agents can reach.</p>
+
+    <div class="ll-list">
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Demo it.</b> Put the link on screen. No "let me just run it locally," no screen-share of your terminal. It works from anyone's phone.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Share it.</b> Send the URL to a collaborator and they're using your agent a second later. Nothing to install on their end.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Let Claude use it.</b> Point Claude, or any MCP client, at the URL and your agent shows up as a tool it can call. Your agent becomes something other agents reach for.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Version it by default.</b> Every push gives you a fresh URL named for the exact code you shipped, so you always know which one you handed out.</span></div>
+    </div>
+
+    <h2 id="s3" class="ll-h2"><span class="ll-h2-num">03</span>What happens when you push</h2>
+
+    <p><code>llnate push</code> feels like sending code to GitHub. On the other side, something picks it up and does that week of work for you, in order: it packages your agent, gives it its own address on the internet, unlocks your encrypted keys, and switches it on. Each agent lands in its own sealed space, so yours and everyone else's never touch. From that one address it answers over both plain HTTP and MCP, which is why a browser, a teammate, and Claude can all reach it the same way.</p>
+
+    <p>Two details are worth a double-take. Your API keys are unlocked only in memory, at the instant your agent starts, so nothing else can read them: not a file, not a dashboard, not you with a terminal open. And the URL you get back is a fingerprint of the exact code you shipped, so every version has its own unambiguous address.</p>
+
+    <div class="ll-callout">
+      <div class="ll-callout-glow"></div>
+      <div class="ll-callout-eyebrow">// our own cloud, literally</div>
+      <p class="ll-callout-body">Here's the part that stops people mid-sentence: none of this runs on a hyperscaler. Your agent goes live on a rack of Dell OptiPlex machines in the 10th Floor Annex. Actual hardware, humming a few floors up, that you can walk over and put your hand on. When we say <i>our own cloud</i>, we mean the literal rack. You can come visit it.</p>
+    </div>
+
+    <p>That's the shape of it. How it actually pulls this off is the genuinely interesting part, and it's all open to read in the <a href="https://github.com/elg0nz/layernetes">repo</a>. You never have to touch any of it, and that's the point: the machinery is ours to run, the one command is yours.</p>
+
+    <h2 id="s4" class="ll-h2"><span class="ll-h2-num">04</span>Try it</h2>
+
+    <p>Layernetes is built by <a href="https://sanscourier.ai">Sanscourier.ai</a> for members of <a href="https://www.learninglayer.ai/">Learning Layer</a>'s AI floor. For now, it's members only. If you want to ship agents this way:</p>
+
+    <div class="ll-steps">
+      <div class="ll-step"><span class="ll-step-num">1</span><span class="ll-step-body">Become a member at <a href="https://frontiertower.io">Frontier Tower</a> and join the AI floor.</span></div>
+      <div class="ll-step"><span class="ll-step-num">2</span><span class="ll-step-body">Email <a href="mailto:business@sanscourier.ai">business@sanscourier.ai</a> for access.</span></div>
+    </div>
+
+    <p>Then it's the five commands above, and your agent is live. Come build with us, and come see the rack it runs on.</p>
+
+    <div class="ll-article-end">
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
+      <a href="/blog/" class="ll-back-link" style="font-size: 13.5px;">← Back to the blog</a>
+    </div>
+  </article>
+</Base>

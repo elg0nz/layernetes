@@ -1,0 +1,200 @@
+---
+import Base from '../layouts/Base.astro';
+import CopyIcon from '../components/CopyIcon.astro';
+import { CLI_TOOLS, cmdFor } from '../data/cli-tools.js';
+
+const FLOW_TEXT = [
+  'llnate init my-agent',
+  'cd my-agent',
+  'llnate plugin install',
+  'llnate login',
+  'llnate keys',
+  'llnate push',
+].join('\n');
+
+const defaultTool = CLI_TOOLS[0];
+---
+<Base
+  title="Layernetes — Your agent is ready. Give it a URL."
+  description="Learning Layer's cloud for AI agents. Write your agent, run llnate push, and it goes live at a public URL any human or any AI can call. Exclusive to the AI floor."
+  accent="#ed8b3a"
+  accentRgb="237, 139, 58"
+  page="home"
+>
+  <header id="top" class="ll-hero" data-screen-label="Hero">
+    <div class="ll-eyebrow-badge">
+      <span class="ll-eyebrow-dot"></span>
+      The Learning Layer cloud, built by Sanscourier.ai
+    </div>
+
+    <h1 class="ll-hero-title">
+      Your agent is ready.<br />Give it <span class="ll-hero-accent">a&nbsp;URL.</span>
+    </h1>
+
+    <p class="ll-hero-sub">
+      Run <code>llnate&nbsp;push</code>. Layernetes packages your code, protects your keys, and ships a live endpoint any human or AI can call.
+    </p>
+
+    <div class="ll-hero-actions">
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn">
+        Ship your first agent
+        <span class="ll-mono">→</span>
+      </a>
+
+      <div class="ll-cli" id="cli-selector">
+        <div class="ll-cli-bar">
+          <button id="cli-toggle" class="ll-cli-toggle" aria-label="Choose your CLI" type="button">
+            <span id="cli-tool-label">{defaultTool.label}</span>
+            <span class="ll-cli-caret">▾</span>
+          </button>
+          <div class="ll-cli-cmd">
+            <span class="tk-dim">$</span>
+            <span id="cli-bin" class="tk-accent">{defaultTool.bin}</span>
+            <span id="cli-flag" class="tk-muted">{defaultTool.flag}</span>
+            <span class="tk-green">&quot;fetch agents.wtp.io/setup and set llnate&quot;</span>
+          </div>
+          <button id="cli-copy" class="ll-cli-copy" aria-label="Copy command" type="button" data-copy={cmdFor(defaultTool)}>
+            <CopyIcon size={15} />
+            <span data-copy-label hidden class="ll-copied">copied</span>
+          </button>
+        </div>
+
+        <div id="cli-menu" class="ll-cli-menu">
+          {CLI_TOOLS.map((t) => (
+            <button class="ll-cli-item" type="button" data-tool-id={t.id}>
+              <span class="ll-cli-item-label">
+                <span class="ll-eyebrow-dot" data-active-dot style="visibility: hidden;"></span>
+                <span>{t.label}</span>
+              </span>
+              <span class="ll-cli-item-bin">{t.bin}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <p class="ll-hero-foot">No dashboard. No cloud account. MIT-licensed CLI.</p>
+  </header>
+
+  <section id="flow" class="ll-flow" data-screen-label="Flow">
+    <div class="ll-flow-grid">
+      <div>
+        <div class="ll-flow-eyebrow">// from code to callable</div>
+        <h2 class="ll-flow-title">You built the agent. We handle the cloud.</h2>
+        <p class="ll-flow-body">Your agent should not need an infrastructure project before someone can try it. Layernetes handles the container, registry, secrets, ingress, TLS, and deployment. You write the agent. Then you push.</p>
+        <div class="ll-flow-list">
+          <div class="ll-flow-item"><span class="ll-flow-arrow">›</span><span><b>llnate push</b> waits until your agent is live, then prints its public URL.</span></div>
+          <div class="ll-flow-item"><span class="ll-flow-arrow">›</span><span>Every revision gets a stable address tied to the SHA you shipped.</span></div>
+          <div class="ll-flow-item"><span class="ll-flow-arrow">›</span><span>Demo it. Share it. Call it from another agent.</span></div>
+        </div>
+      </div>
+
+      <div class="ll-term">
+        <div class="ll-term-bar">
+          <span class="ll-term-dot red"></span>
+          <span class="ll-term-dot yellow"></span>
+          <span class="ll-term-dot green"></span>
+          <span class="ll-term-title">my-agent · zsh</span>
+          <button class="ll-term-copy" aria-label="Copy commands" type="button" data-copy={FLOW_TEXT}>
+            <CopyIcon size={14} />
+            <span data-copy-label hidden class="ll-copied">copied</span>
+          </button>
+        </div>
+        <div class="ll-term-body"><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">init</span> <span class="tk-muted">my-agent</span>   <span class="tk-comment"># scaffold your agent</span></div><div><span class="tk-dim">$ </span><span class="tk-fg">cd</span> <span class="tk-muted">my-agent</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">plugin install</span>   <span class="tk-comment"># connect your AI assistant</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">login</span>   <span class="tk-comment"># claim your repo and keys</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">keys</span>   <span class="tk-comment"># encrypt secrets into the repo</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-green">push</span>   <span class="tk-comment"># deploy and print the live URL</span></div><div style="height: 8px;"></div><div><span class="ll-ok" style="color:#61c554;">✔</span> <span class="tk-muted" style="color:#9aa0a8;">built · pushed · live</span></div><div><span class="tk-green">→</span> <span class="tk-accent" style="text-decoration: underline; text-underline-offset: 3px;">https://my-agent-a1b2c3d.agents.wtp.io</span><span class="tk-accent ll-cursor">▋</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="ll-features" data-screen-label="Features">
+    <div class="ll-features-head">
+      <div class="ll-feature-eyebrow">// what you get</div>
+      <h2 class="ll-section-title">Everything between your code and a callable agent.</h2>
+    </div>
+
+    <div class="ll-feature-grid">
+      <div class="ll-card">
+        <div class="ll-card-head">
+          <span class="ll-card-tag">// SHIP</span>
+          <span class="ll-card-num">01</span>
+        </div>
+        <h3 class="ll-card-title">One command. One live agent.</h3>
+        <p class="ll-card-body">One <code>llnate push</code> takes your local code to a public URL and waits until the deployment is ready. Every revision gets its own stable, SHA-based address.</p>
+        <div class="ll-card-chip">→ my-agent-<span class="tk-dim">a1b2c3d</span>.agents.wtp.io</div>
+      </div>
+
+      <div class="ll-card">
+        <div class="ll-card-head">
+          <span class="ll-card-tag">// CALL</span>
+          <span class="ll-card-num">02</span>
+        </div>
+        <h3 class="ll-card-title">One agent. Two ways in.</h3>
+        <p class="ll-card-body">Every deployment includes an MCP endpoint and a plain HTTP API at the same URL. Point Claude at <code>/mcp</code>. POST to <code>/kickoff</code>. Use the interface that fits the next thing you are building.</p>
+        <div class="ll-card-chips">
+          <span class="ll-chip"><span class="tk-green">GET</span> /mcp</span>
+          <span class="ll-chip"><span class="tk-accent">POST</span> /kickoff</span>
+        </div>
+      </div>
+
+      <div class="ll-card">
+        <div class="ll-card-head">
+          <span class="ll-card-tag">// SECRETS</span>
+          <span class="ll-card-num">03</span>
+        </div>
+        <h3 class="ll-card-title">Commit ciphertext. Not keys.</h3>
+        <p class="ll-card-body">Layernetes encrypts your API keys before they enter the repo. They are decrypted in memory when your agent starts. The running agent is the only thing that can read them.</p>
+        <div class="ll-card-chip">OPENAI_API_KEY=<span class="tk-accent">enc:AgVk9d…f21c</span></div>
+      </div>
+
+      <div class="ll-card">
+        <div class="ll-card-head">
+          <span class="ll-card-tag">// ACCESS</span>
+          <span class="ll-card-num">04</span>
+        </div>
+        <h3 class="ll-card-title">Your membership includes the cloud.</h3>
+        <p class="ll-card-body">Layernetes is reserved for Learning Layer members. No AWS account to configure. No infrastructure to maintain. Compute, deployment, and ingress are already there when you are ready to ship.</p>
+        <div class="ll-card-chip"><span class="ll-ok" style="color:#61c554;">✔</span> membership · <span class="ll-ok" style="color:#61c554;">✔</span> compute · <span class="ll-ok" style="color:#61c554;">✔</span> ingress</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ll-learn" data-screen-label="Learn">
+    <div class="ll-feature-eyebrow" style="margin-bottom: 22px;">// go deeper</div>
+    <div class="ll-learn-grid">
+      <a href="/blog/introducing-layernetes/" class="ll-learn-card">
+        <h3 class="ll-learn-title">Meet Layernetes</h3>
+        <p class="ll-learn-body">See what Layernetes is, ship your first agent, and look under the hood.</p>
+        <span class="ll-learn-link">Read the introduction →</span>
+      </a>
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-learn-card">
+        <h3 class="ll-learn-title">Get access</h3>
+        <p class="ll-learn-body">Layernetes is members-only for now. See how to join the cloud and start shipping.</p>
+        <span class="ll-learn-link">How to get access →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="ll-cta-section" data-screen-label="CTA">
+    <div class="ll-cta-panel">
+      <div class="ll-cta-glow"></div>
+      <div class="ll-cta-body-wrap">
+        <h2 class="ll-cta-title">Your agent works. Let someone call it.</h2>
+        <p class="ll-cta-body">Push the code. Share the URL. Get it in front of the people, agents, and collaborators who can take it somewhere new.</p>
+        <div class="ll-cta-actions">
+          <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
+          <div class="ll-cta-cmd">
+            <span class="tk-dim">$</span><span class="tk-fg">llnate</span><span class="tk-green">push</span>
+            <button class="ll-cta-copy" aria-label="Copy command" type="button" data-copy="llnate push">
+              <CopyIcon size={15} />
+              <span data-copy-label hidden class="ll-copied">copied</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { initCliSelector } from '../scripts/cli-selector.js';
+    initCliSelector();
+  </script>
+</Base>

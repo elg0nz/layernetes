@@ -1,0 +1,83 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+<Base
+  title="The Layernetes blog"
+  description="Notes on shipping agents, from the team building the cloud they run on. How Layernetes works, what we're learning, and how to get on it."
+  accent="#7c9bff"
+  accentRgb="124, 155, 255"
+  page="blog-index"
+>
+  <header id="top" class="ll-blog-header" data-screen-label="Blog header">
+    <div class="ll-blog-eyebrow">// dispatches</div>
+    <h1 class="ll-blog-title">The blog</h1>
+    <p class="ll-blog-sub">Notes on shipping agents, from the team building the cloud they run on. How Layernetes works, what we're learning, and how to get on it.</p>
+  </header>
+
+  <section class="ll-featured" data-screen-label="Featured">
+    <div class="ll-featured-eyebrow">// latest</div>
+    <a href="/blog/introducing-layernetes/" class="ll-featured-card" data-screen-label="Featured post">
+      <div class="ll-featured-glow"></div>
+      <div class="ll-featured-inner">
+        <div class="ll-meta">
+          <span class="ll-badge">Announcement</span>
+          <span class="ll-meta-dim">Jul 6, 2026</span>
+          <span class="ll-meta-sep">·</span>
+          <span class="ll-meta-mid">The Layernetes Team</span>
+          <span class="ll-meta-sep">·</span>
+          <span class="ll-meta-dim">6 min read</span>
+        </div>
+
+        <h2 class="ll-featured-title">
+          Introducing Layernetes: <span class="ll-featured-mono">git&nbsp;push</span> your AI agents
+        </h2>
+
+        <p class="ll-featured-body">Standing up the infrastructure to host an AI agent takes weeks. Layernetes takes one command and about a minute: your agent goes live at a public URL, ready to share, demo, or hand to Claude. Here's how it works, and how to try it.</p>
+
+        <div class="ll-featured-actions">
+          <span class="ll-pill-static">Read the post <span class="ll-mono">→</span></span>
+          <span class="ll-pill-outline">
+            <span class="tk-dim">$</span><span class="tk-fg">llnate</span><span class="tk-green">push</span>
+          </span>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <section class="ll-archive" data-screen-label="Archive">
+    <div class="ll-archive-head">
+      <span class="ll-archive-eyebrow">// all posts</span>
+      <span class="ll-archive-count">1 post</span>
+    </div>
+
+    <div>
+      <div class="ll-archive-month">July 2026</div>
+
+      <a href="/blog/introducing-layernetes/" class="ll-archive-row">
+        <span class="ll-archive-date">Jul 06</span>
+        <span class="ll-archive-main">
+          <span class="ll-archive-title">Introducing Layernetes: git push your AI agents</span>
+          <span class="ll-archive-sub">One command takes your agent from local code to a live, callable URL.</span>
+        </span>
+        <span class="ll-archive-tag">Announcement</span>
+        <span class="ll-archive-arrow">→</span>
+      </a>
+    </div>
+
+    <p class="ll-archive-note">// more dispatches landing soon</p>
+  </section>
+
+  <section class="ll-subscribe" data-screen-label="Subscribe">
+    <div class="ll-subscribe-panel">
+      <div class="ll-subscribe-glow"></div>
+      <div>
+        <h3 class="ll-subscribe-title">New posts land here.</h3>
+        <p class="ll-subscribe-body">Follow along as we ship. Subscribe over RSS, or watch the repo on GitHub.</p>
+      </div>
+      <div class="ll-subscribe-actions">
+        <a href="/blog/rss.xml" class="ll-btn ll-btn-sm">Subscribe via RSS <span class="ll-mono">→</span></a>
+        <a href="https://github.com/elg0nz/layernetes" class="ll-btn-outline">GitHub</a>
+      </div>
+    </div>
+  </section>
+</Base>

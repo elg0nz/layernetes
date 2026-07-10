@@ -1,0 +1,29 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  current: 'home' | 'blog-index' | 'blog-post';
+}
+const { current } = Astro.props;
+
+const isHome = current === 'home';
+const logoHref = isHome ? '#top' : '/';
+const flowHref = isHome ? '#flow' : '/#flow';
+const featuresHref = isHome ? '#features' : '/#features';
+const blogHref = current === 'blog-index' ? '#top' : '/blog/';
+const blogActive = !isHome;
+---
+<nav class="ll-nav" data-screen-label="Nav">
+  <a href={logoHref} class="ll-logo">
+    <Logo size={26} />
+    <span class="ll-logo-text">Layernetes</span>
+  </a>
+  <div class="ll-nav-links">
+    <a href={flowHref} class="ll-nav-link">How it works</a>
+    <a href={featuresHref} class="ll-nav-link">Features</a>
+    <a href="/overview/" class="ll-nav-link">Docs</a>
+    <a href={blogHref} class:list={['ll-nav-link', { 'is-active': blogActive }]}>Blog</a>
+    <a href="https://github.com/elg0nz/layernetes" class="ll-nav-link">GitHub</a>
+    <a href="/blog/introducing-layernetes/#try-it" class="ll-nav-cta">Ship an agent</a>
+  </div>
+</nav>

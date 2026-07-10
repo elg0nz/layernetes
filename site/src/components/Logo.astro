@@ -1,0 +1,14 @@
+---
+interface Props {
+  size?: number;
+  minimal?: boolean;
+}
+const { size = 26, minimal = false } = Astro.props;
+---
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M12 3 L21 7.5 L12 12 L3 7.5 Z" fill="var(--accent)"></path>
+  <path d="M3 12 L12 16.5 L21 12" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" opacity="0.62"></path>
+  {!minimal && (
+    <path d="M3 16.5 L12 21 L21 16.5" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" opacity="0.34"></path>
+  )}
+</svg>

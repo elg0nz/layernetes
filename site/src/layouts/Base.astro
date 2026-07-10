@@ -1,0 +1,78 @@
+---
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  accent: string;
+  accentRgb: string;
+  page: 'home' | 'blog-index' | 'blog-post';
+}
+const { title, description, accent, accentRgb, page } = Astro.props;
+
+// Background geometry differs slightly per page in the source designs (glow
+// size/position, grid/canvas mask ellipse) — everything else is shared.
+const VARIANTS = {
+  home: {
+    glowTop: '-260px', glowWidth: '1100px', glowHeight: '780px', glowBlur: '30px', glowVar: 0.65,
+    gridMask: 'radial-gradient(ellipse 80% 55% at 50% 0%, #000 30%, transparent 78%)',
+    canvasMask: 'radial-gradient(ellipse 115% 70% at 50% 4%, #000 8%, transparent 66%)',
+    canvasOpacity: 0.34,
+    topFade: true,
+  },
+  'blog-index': {
+    glowTop: '-280px', glowWidth: '1100px', glowHeight: '720px', glowBlur: '34px', glowVar: 0.7,
+    gridMask: 'radial-gradient(ellipse 80% 45% at 50% 0%, #000 30%, transparent 78%)',
+    canvasMask: 'radial-gradient(ellipse 115% 70% at 50% 4%, #000 8%, transparent 66%)',
+    canvasOpacity: 0.34,
+    topFade: false,
+  },
+  'blog-post': {
+    glowTop: '-300px', glowWidth: '1000px', glowHeight: '640px', glowBlur: '36px', glowVar: 0.7,
+    gridMask: 'radial-gradient(ellipse 70% 35% at 50% 0%, #000 30%, transparent 78%)',
+    canvasMask: 'radial-gradient(ellipse 120% 60% at 50% 2%, #000 6%, transparent 60%)',
+    canvasOpacity: 0.3,
+    topFade: false,
+  },
+};
+const v = VARIANTS[page];
+const rootStyle = `--accent:${accent}; --accent-rgb:${accentRgb}; --glow:${v.glowVar};`;
+const canvasStyle = `opacity:${v.canvasOpacity}; mask-image:${v.canvasMask}; -webkit-mask-image:${v.canvasMask};`;
+const gridStyle = `mask-image:${v.gridMask}; -webkit-mask-image:${v.gridMask};`;
+const glowStyle = `top:${v.glowTop}; width:${v.glowWidth}; height:${v.glowHeight}; filter: blur(${v.glowBlur});`;
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <slot name="head" />
+</head>
+<body>
+  <div class="ll-root" style={rootStyle}>
+    <canvas id="bg-canvas" class="ll-canvas" aria-hidden="true" style={canvasStyle}></canvas>
+    <div class="ll-grid" style={gridStyle}></div>
+    <div class="ll-glow" style={glowStyle}></div>
+    {v.topFade && <div class="ll-top-fade"></div>}
+
+    <div class="ll-content">
+      <Nav current={page} />
+      <slot />
+      <Footer current={page} />
+    </div>
+  </div>
+
+  <script>
+    import { initShaderBackground } from '../scripts/shader-bg.js';
+    import { initCopyButtons } from '../scripts/copy.js';
+    initShaderBackground('bg-canvas');
+    initCopyButtons();
+  </script>
+</body>
+</html>
