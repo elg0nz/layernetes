@@ -7,13 +7,28 @@ from app.kube import PUBLIC_KEY_ANNOTATION
 
 
 def seed_agent(
-    cr_store, secret_store, owner="gonz", name="hello-agent", ci_token="ci-tok", status=None, sha=None
+    cr_store,
+    secret_store,
+    owner="gonz",
+    name="hello-agent",
+    ci_token="ci-tok",
+    status=None,
+    sha=None,
+    cr_name=None,
+    spec_owner=None,
 ):
-    """Drop an already-provisioned agent straight into the fake stores."""
+    """Drop an already-provisioned agent straight into the fake stores.
+
+    ``cr_name`` overrides the stored object name (which in production is the
+    sanitized ``k8s_name`` form), and ``spec_owner`` overrides ``spec.owner``
+    (the raw Gitea username used for auth), so tests can model the raw/sanitized
+    split that real provisioning produces.
+    """
     from kubernetes import client as k8s
 
-    cr_name = f"{owner}-{name}"
-    spec = {"owner": owner, "repo": f"{owner}/{name}", "keySecretRef": f"age-key-{owner}"}
+    cr_name = cr_name or f"{owner}-{name}"
+    spec_owner = spec_owner or owner
+    spec = {"owner": spec_owner, "repo": f"{spec_owner}/{name}", "keySecretRef": f"age-key-{owner}"}
     if sha is not None:
         spec["sha"] = sha
     cr = {
@@ -149,6 +164,35 @@ class TestProvision:
         assert repo_req.headers["Authorization"] == "token user-token-123"
         assert json.loads(repo_req.content)["auto_init"] is False
 
+    def test_underscore_username_sanitized_for_k8s(
+        self, client, as_user, gitea_mock, secret_store, cr_store
+    ):
+        # Gitea usernames may contain '_', which is invalid in RFC 1123 K8s
+        # object names. Provisioning must sanitize the username where it
+        # becomes a resource *name*, while keeping it raw for owner/repo.
+        headers, _ = as_user(username="learninglayer_glo")
+        self.mock_gitea_provisioning(gitea_mock, owner="learninglayer_glo")
+
+        resp = client.post("/v1/agents", json={"name": "hello-agent"}, headers=headers)
+        assert resp.status_code == 201
+        body = resp.json()
+
+        # CR name is sanitized ('_' -> '-'); repo path stays raw.
+        assert body["name"] == "learninglayer-glo-hello-agent"
+        assert body["repo"] == "learninglayer_glo/hello-agent"
+
+        # Secrets are named with the sanitized username, never the raw one.
+        assert "age-key-learninglayer-glo" in secret_store
+        assert "age-key-learninglayer_glo" not in secret_store
+        assert "ll-ci-token-learninglayer-glo-hello-agent" in secret_store
+
+        # The CR keeps the raw username as owner (auth relies on it) but points
+        # at the sanitized key Secret.
+        cr = cr_store["learninglayer-glo-hello-agent"]
+        assert cr["spec"]["owner"] == "learninglayer_glo"
+        assert cr["spec"]["repo"] == "learninglayer_glo/hello-agent"
+        assert cr["spec"]["keySecretRef"] == "age-key-learninglayer-glo"
+
     def test_idempotent_rerun(self, client, as_user, gitea_mock, secret_store, cr_store):
         headers, _ = as_user()
         self.mock_gitea_provisioning(gitea_mock)
@@ -186,6 +230,26 @@ class TestBuilds:
         assert cr_store[name]["spec"]["sha"] == "3f2a91c"
         assert cr_store[name]["spec"]["image"] == "gitea.example/gonz/hello-agent:3f2a91c"
 
+    def test_callback_resolves_raw_underscore_name(self, client, secret_store, cr_store):
+        # CI derives CR_NAME=<owner>-<repo> with the raw '_' username, but the
+        # CR + ci-token Secret are stored under the sanitized name. The callback
+        # must still resolve.
+        seed_agent(
+            cr_store,
+            secret_store,
+            owner="learninglayer-glo",
+            spec_owner="learninglayer_glo",
+            cr_name="learninglayer-glo-hello-agent",
+            ci_token="ci-tok",
+        )
+        resp = client.post(
+            "/v1/agents/learninglayer_glo-hello-agent/builds",
+            json={"sha": "3f2a91c", "image": "img:3f2a91c"},
+            headers={"Authorization": "Bearer ci-tok"},
+        )
+        assert resp.status_code == 200
+        assert cr_store["learninglayer-glo-hello-agent"]["spec"]["sha"] == "3f2a91c"
+
     def test_rejects_bad_ci_token(self, client, secret_store, cr_store):
         name = seed_agent(cr_store, secret_store, ci_token="ci-tok")
         resp = client.post(
@@ -217,6 +281,24 @@ class TestStatus:
         resp = client.get(f"/v1/agents/{name}/status", headers=headers)
         assert resp.status_code == 200
         assert resp.json() == {"phase": "Pending", "url": "", "message": "", "sha": ""}
+
+    def test_status_resolves_raw_underscore_name(self, client, as_user, secret_store, cr_store):
+        # llnate polls the raw '<username>-<repo>' name; the CR lives under the
+        # sanitized name. Auth still keys off the raw spec.owner.
+        headers, _ = as_user(username="learninglayer_glo")
+        seed_agent(
+            cr_store,
+            secret_store,
+            owner="learninglayer-glo",
+            spec_owner="learninglayer_glo",
+            cr_name="learninglayer-glo-hello-agent",
+            status={"phase": "Ready", "url": "http://x", "message": ""},
+            sha="3f2a91c",
+        )
+        resp = client.get("/v1/agents/learninglayer_glo-hello-agent/status", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json()["phase"] == "Ready"
+        assert resp.json()["sha"] == "3f2a91c"
 
     def test_passthrough_and_short_name(self, client, as_user, secret_store, cr_store):
         headers, _ = as_user()

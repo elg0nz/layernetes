@@ -100,6 +100,8 @@ status:
   message: ""                     # human-readable detail on Failed
 ```
 
+**Name derivation:** Kubernetes object names (`metadata.name`, `keySecretRef`, the agent namespace `agent-<owner>-<agent>`) must be RFC 1123 labels, but Gitea usernames may contain characters K8s forbids — most commonly `_` (e.g. `learninglayer_glo`). `ll-api` runs the username through `kube.k8s_name` when deriving any resource *name*, so `learninglayer_glo` yields `age-key-learninglayer-glo` and a CR named `learninglayer-glo-<agent>`. The raw username is preserved in `spec.owner` (used for authorization) and in the `repo`/`image` paths (Gitea and OCI both permit `_`). Because clients (`llnate`, CI) reconstruct the raw `<owner>-<agent>` name, the `ll-api` endpoints that take a `{name}` sanitize it on the way in, so both the raw and sanitized forms resolve.
+
 **Revision semantics (MVP):** only the latest revision runs. A new `spec.sha` replaces the agent's Deployment and Ingress; previous `<sha>` hostnames stop resolving. Revision history and rollback are post-MVP.
 
 ### `ll-api` REST API

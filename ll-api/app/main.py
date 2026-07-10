@@ -12,7 +12,10 @@ endpoint shape or anything downstream.
 Naming: provisioning returns the cluster-wide agent name ``<username>-<name>``
 and that is what CI must use on ``/v1/agents/{name}/builds``. User-auth agent
 endpoints accept either the full name or the short repo name (which gets
-prefixed with the caller's username).
+prefixed with the caller's username). The username portion of every K8s
+resource name is run through ``kube.k8s_name`` first, since Gitea usernames
+may contain ``_`` (invalid in RFC 1123 object names); the raw username is
+still used for ``spec.owner`` and the Gitea repo / registry paths.
 """
 
 import hmac
@@ -27,7 +30,7 @@ from fastapi.responses import JSONResponse
 
 from .auth import AuthedUser, bearer_token, require_user
 from .gitea import GiteaClient, GiteaError
-from .kube import Kube
+from .kube import Kube, k8s_name
 from .models import (
     AgentCreateRequest,
     AgentCreateResponse,
@@ -116,7 +119,13 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
         agent by its full CR name (the short-name-as-owner-prefix shorthand
         only makes sense for the owner, so admins must pass the full name).
         """
-        candidates = dict.fromkeys([name, f"{user.username}-{name}"])
+        # Clients (llnate CLI, CI) reconstruct the raw `<username>-<repo>` name,
+        # which may contain '_'; the CR is stored under the sanitized name. Try
+        # the name as given, its sanitized form, and the sanitized owner-prefixed
+        # short form, so every shape a caller might send resolves.
+        candidates = dict.fromkeys(
+            [name, k8s_name(name), k8s_name(f"{user.username}-{name}")]
+        )
         for candidate in candidates:
             cr = kube.get_llagent(candidate)
             if cr is None:
@@ -160,7 +169,7 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
         gitea: GiteaClient = app.state.gitea
         kube = get_kube(request)
         repo = f"{user.username}/{body.name}"
-        cr_name = f"{user.username}-{body.name}"
+        cr_name = k8s_name(f"{user.username}-{body.name}")
 
         try:
             gitea.create_repo(user.token, body.name)
@@ -195,7 +204,7 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
 
         kube.create_llagent(
             cr_name,
-            {"owner": user.username, "repo": repo, "keySecretRef": f"age-key-{user.username}"},
+            {"owner": user.username, "repo": repo, "keySecretRef": f"age-key-{k8s_name(user.username)}"},
         )
         logger.info("provisioned agent %s (repo %s)", cr_name, repo)
         return AgentCreateResponse(
@@ -210,6 +219,9 @@ def create_app(settings: Settings | None = None, kube: Kube | None = None) -> Fa
         name: str, body: BuildRequest, request: Request, token: str = Depends(bearer_token)
     ) -> dict:
         kube = get_kube(request)
+        # CI derives CR_NAME=<owner>-<repo> from the repo context, which may
+        # contain '_'; resources are stored under the sanitized name.
+        name = k8s_name(name)
         secret = kube.get_secret(_ci_secret_name(name))
         expected = Kube.secret_value(secret, "token") if secret else None
         if not expected or not hmac.compare_digest(token, expected):

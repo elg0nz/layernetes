@@ -6,6 +6,8 @@ available, falling back to the age-keygen binary.
 """
 
 import base64
+import hashlib
+import re
 import subprocess
 from datetime import datetime, timezone
 
@@ -17,6 +19,60 @@ VERSION = "v1alpha1"
 PLURAL = "llagents"
 PUBLIC_KEY_ANNOTATION = "layernetes.learninglayer.ai/public-key"
 AGE_KEY_DATA_KEY = "age.key"
+
+# RFC 1123 *label*: lowercase alphanumeric or '-', must start and end with an
+# alphanumeric, at most 63 characters. We target the label form (not the more
+# permissive subdomain, which allows dots and 253 chars) because the operator
+# embeds the CR name in a namespace name -- `agent-<cr-name>` -- and namespace
+# names are RFC 1123 labels: no dots, <= 63 chars.
+_RFC1123_LABEL = re.compile(r"[a-z0-9]([-a-z0-9]*[a-z0-9])?")
+_K8S_NAME_INVALID = re.compile(r"[^a-z0-9-]+")
+_MAX_LABEL_LEN = 63
+
+
+def is_valid_k8s_name(value: str) -> bool:
+    """Whether ``value`` is already a valid RFC 1123 label usable as a K8s name."""
+    return (
+        bool(value)
+        and len(value) <= _MAX_LABEL_LEN
+        and _RFC1123_LABEL.fullmatch(value) is not None
+    )
+
+
+def k8s_name(value: str) -> str:
+    """Coerce an arbitrary identifier (e.g. a Gitea username) into a valid K8s name.
+
+    Kubernetes object names must be lowercase RFC 1123 labels, which forbid
+    ``_`` and every other non-``[a-z0-9-]`` character -- but Gitea usernames
+    are far more permissive (``learninglayer_glo``, unicode, dots, ...). Any
+    username that becomes part of a resource *name* (the per-user age-key
+    Secret, the LLAgent CR, its derived Secrets, the agent namespace) is run
+    through this. The raw username is still stored in the CR's ``spec.owner``
+    for authorization and used verbatim for Gitea repo / OCI registry paths,
+    which permit ``_``.
+
+    The result is always a valid label:
+    - every character outside ``[a-z0-9-]`` (after lowercasing) becomes ``-``;
+    - runs of ``-`` collapse and leading/trailing ``-`` are trimmed;
+    - names longer than 63 chars are truncated with an 8-char hash suffix;
+    - a value that reduces to empty (all punctuation) gets a stable hash name.
+
+    Truncation and character folding are lossy, so distinct usernames *can*
+    collapse to one name; a hash suffix is appended on truncation to keep long
+    names distinct. For the MVP's curated, admin-provisioned usernames this is
+    not a concern, but callers minting names from untrusted input should be
+    aware.
+    """
+    if is_valid_k8s_name(value):
+        return value
+    safe = _K8S_NAME_INVALID.sub("-", value.lower())
+    safe = re.sub(r"-{2,}", "-", safe).strip("-")
+    if len(safe) > _MAX_LABEL_LEN:
+        digest = hashlib.sha256(value.encode()).hexdigest()[:8]
+        safe = f"{safe[: _MAX_LABEL_LEN - 9].rstrip('-')}-{digest}"
+    if not safe:
+        safe = "u-" + hashlib.sha256(value.encode()).hexdigest()[:8]
+    return safe
 
 
 def generate_age_keypair() -> tuple[str, str]:
@@ -97,7 +153,7 @@ class Kube:
 
     def get_age_public_key(self, username: str) -> str | None:
         """Read-only lookup of the user's age public key; None if never provisioned."""
-        secret = self.get_secret(f"age-key-{username}")
+        secret = self.get_secret(f"age-key-{k8s_name(username)}")
         if secret is None:
             return None
         public = (secret.metadata.annotations or {}).get(PUBLIC_KEY_ANNOTATION)
@@ -111,11 +167,12 @@ class Kube:
         public = self.get_age_public_key(username)
         if public:
             return public
-        if self.get_secret(f"age-key-{username}") is not None:
-            raise RuntimeError(f"secret age-key-{username} exists but its public key is unrecoverable")
+        secret_name = f"age-key-{k8s_name(username)}"
+        if self.get_secret(secret_name) is not None:
+            raise RuntimeError(f"secret {secret_name} exists but its public key is unrecoverable")
         public, identity_file = generate_age_keypair()
         self.create_secret(
-            f"age-key-{username}",
+            secret_name,
             {AGE_KEY_DATA_KEY: identity_file},
             annotations={PUBLIC_KEY_ANNOTATION: public},
         )
