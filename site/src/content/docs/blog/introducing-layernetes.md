@@ -12,25 +12,26 @@ That's the wall everyone hits. Building the agent got easy; your coding assistan
 Layernetes collapses all of that into one command. You write your agent, run it, and about a minute later it's live on the internet at its own address.
 
 ```sh
-llnate push
+claude -p "fetch agents.wtp.io/setup and set llnate"
 ```
 
-`push` prints a public URL. Send it to a friend, drop it in a channel, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.
+After this a simple `llnate push` deploys your agent and gives it a public URL. 
+Send it to a friend, drop it in a channel, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.
 
 Weeks of infrastructure, or one command. That's the whole pitch.
 
 ## From an idea to a link you can share
 
-Here's the whole path, start to finish:
+Now some 🤓 details on how this works
 
 ```sh
-llnate init my-agent      # start a new agent project
+llnate init my-agent      # starts a new agent project
 cd my-agent
-llnate plugin install     # bring your AI coding assistant into the loop
+llnate plugin install     # brings your AI coding assistant into the loop
 # ... build your agent, the way you build everything now ...
-llnate login              # sign in to the cloud
-llnate keys               # add your API keys, encrypted
-llnate push               # ship it, get your URL
+llnate login              # signs you into our cloud
+llnate keys               # adds your API keys, encrypted
+llnate push               # ships it, registers your URL
 ```
 
 You spend your time on the middle line, building the agent. Everything around it is one word each. Your agent needs API keys to do its job; `llnate keys` encrypts them so they're safe to keep in your project, and only your running agent can ever read them. You never paste a secret into a dashboard.
@@ -39,7 +40,7 @@ When `push` finishes, it hands you the link:
 
 ```
 Agent is live:
-  https://3f2a91c.agents.layernetes.learninglayer.ai
+  https://3f2a91c.agents.agents.wtp.io
 ```
 
 That link is real, public, and yours.
