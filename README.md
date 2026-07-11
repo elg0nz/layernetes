@@ -1,37 +1,38 @@
 # Layernetes
 
-Build, ship, and host [CrewAI](https://github.com/crewAIInc/crewAI)-powered AI agents on the [Learning Layer](https://www.learninglayer.ai/) cloud — a Kubernetes platform running on Talos Linux.
+Your agent works. Give it a URL.
 
-Layernetes is developed by [Sanscourier.ai](https://sanscourier.ai), which licenses it to [Learning Layer](https://www.learninglayer.ai/) for the Learning Layer cloud. Sanscourier.ai reserves all rights — see [License](#license).
+Layernetes is the [Learning Layer](https://www.learninglayer.ai/) cloud for [CrewAI](https://github.com/crewAIInc/crewAI)-powered agents. Write the agent locally, run `llnate push`, and it goes live at a public URL any human or any AI can call over MCP or plain HTTP.
 
-Write your agent locally with your favorite coding assistant, then `llnate push` deploys it to a sandboxed environment with its own public URL, callable via MCP or plain HTTP.
+It's built by [Sanscourier.ai](https://sanscourier.ai) for the Learning Layer cloud. The full platform is open source; hosted access is members-only for now. See [License](#license).
+
+## Fastest Setup
+
+If you're using Claude Code, this is the preferred way to get started:
+
+```sh
+claude -p "fetch agents.wtp.io/setup and set llnate"
+```
+
+That prompt fetches the agent-readable setup instructions at `agents.wtp.io/setup` and walks Claude through the full `llnate` flow for you: install the CLI, scaffold the project, wire in the coding hooks, log in, encrypt keys, and ship.
+
+If you want the same instructions directly, read [layernetes.wtp.io/setup](https://layernetes.wtp.io/setup).
 
 ## Quickstart
 
+New here? Start with [Introducing Layernetes](https://layernetes.wtp.io/blog/introducing-layernetes/) for the guided tour. What follows is the operator's version.
+
 ```sh
-# 1. Scaffold a new LLAgent: a CrewAI-based agent project, plus the
-#    Dockerfile and CI workflow it needs in our cloud — and an AGENTS.md that
-#    documents the runtime contract and the llnate developer loop for your
-#    coding assistant
-llnate init my-agent
+llnate init my-agent      # scaffold your agent plus everything the cloud expects
 cd my-agent
-
-# 2. Install the AI coding hooks so Claude (or your favorite
-#    coding agent) can build your LLAgent with you.
-#    This wires up CrewAI's "Build with AI" setup for you:
-#    https://github.com/crewAIInc/crewAI#build-with-ai
-llnate plugin install
-
-# 3. Build your agent with your coding assistant — the hooks
-#    from step 2 give it everything it needs
-
-# 4. Ship it to the Learning Layer cloud
-llnate login   # sign in (username/password); provisions your cloud repo and keys
-llnate keys    # encrypt your credentials (API keys, etc.)
-llnate push    # deploy — streams build/deploy progress, prints your URLs
+llnate plugin install     # bring your AI coding assistant into the loop
+# ... build your agent, the way you build everything now ...
+llnate login              # sign in and provision your cloud repo and age key
+llnate keys               # encrypt your credentials into the repo
+llnate push               # deploy, wait until live, print the public URLs
 ```
 
-`llnate push` blocks until your agent is live, then prints its public URLs. Anyone can call it:
+`llnate push` blocks until your agent is live, then prints its public URLs. Every deployed agent speaks both:
 
 - **MCP** — every LLAgent ships with a built-in [FastMCP](https://github.com/jlowin/fastmcp) server, so it plugs directly into MCP clients like Claude.
 - **HTTP API** — a plain [FastAPI](https://fastapi.tiangolo.com/) interface for everything else.

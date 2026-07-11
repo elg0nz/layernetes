@@ -20,6 +20,16 @@ Send it to a friend, drop it in a channel, put it on screen at demo night, or ha
 
 Weeks of infrastructure, or one command. That's the whole pitch.
 
+## One command for Claude Code
+
+If you're using Claude Code, the shortest path into Layernetes is also one command:
+
+```sh
+claude -p "fetch agents.wtp.io/setup and set llnate"
+```
+
+That prompt tells Claude to fetch the setup instructions written for coding assistants and run the full setup loop with you. It installs `llnate`, scaffolds the project, wires in the coding hooks, gets you logged into the cloud, encrypts your keys, and ships the agent. If you're already inside Claude Code, start there.
+
 ## From an idea to a link you can share
 
 Now some 🤓 details on how this works
@@ -71,4 +81,4 @@ Layernetes is built by [Sanscourier.ai](https://sanscourier.ai) for members of [
 1. Become a member at [Frontier Tower](https://frontiertower.io) and join the AI floor.
 2. Email [business@sanscourier.ai](mailto:business@sanscourier.ai) for access.
 
-Then it's the five commands above, and your agent is live. Come build with us, and come see the rack it runs on.
+Then run the Claude Code command above, and your agent is live. Come build with us, and come see the rack it runs on.

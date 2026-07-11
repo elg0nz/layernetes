@@ -60,6 +60,7 @@ const postJsonLd = JSON.stringify({
     <nav class="ll-toc">
       <div class="ll-toc-eyebrow">// on this page</div>
       <div class="ll-toc-list">
+        <a href="#s0" class="ll-toc-link">00 · One command for Claude Code</a>
         <a href="#s1" class="ll-toc-link">01 · From an idea to a link you can share</a>
         <a href="#s2" class="ll-toc-link">02 · What a live agent gets you</a>
         <a href="#s3" class="ll-toc-link">03 · What happens when you push</a>
@@ -82,6 +83,16 @@ const postJsonLd = JSON.stringify({
     <p><code>push</code> prints a public URL. Send it to a friend, drop it in a channel, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.</p>
 
     <p class="ll-lede">Weeks of infrastructure, or one command. That's the whole pitch.</p>
+
+    <h2 id="s0" class="ll-h2"><span class="ll-h2-num">00</span>One command for Claude Code</h2>
+
+    <p>If you're using Claude Code, the shortest path into Layernetes is also one command:</p>
+
+    <div class="ll-inline-cmd">
+      <span class="tk-dim">$</span><span class="tk-fg">claude</span><span class="tk-green">-p</span> <span class="tk-accent">"fetch agents.wtp.io/setup and set llnate"</span>
+    </div>
+
+    <p>That prompt tells Claude to fetch the setup instructions written for coding assistants and run the full setup loop with you. It installs <code>llnate</code>, scaffolds the project, wires in the coding hooks, gets you logged into the cloud, encrypts your keys, and ships the agent. If you're already inside Claude Code, start there.</p>
 
     <h2 id="s1" class="ll-h2"><span class="ll-h2-num">01</span>From an idea to a link you can share</h2>
 
@@ -146,7 +157,7 @@ const postJsonLd = JSON.stringify({
       <div class="ll-step"><span class="ll-step-num">2</span><span class="ll-step-body">Email <a href="mailto:business@sanscourier.ai">business@sanscourier.ai</a> for access.</span></div>
     </div>
 
-    <p>Then it's the five commands above, and your agent is live. Come build with us, and come see the rack it runs on.</p>
+    <p>Then run the Claude Code command above, and your agent is live. Come build with us, and come see the rack it runs on.</p>
 
     <div class="ll-article-end">
       <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
