@@ -55,6 +55,10 @@ export default defineConfig({
         starlightBlog({
           title: 'Blog',
           authors: {
+            glo: {
+              name: 'Glo Maldonado',
+              url: 'https://sanscourier.ai',
+            },
             layernetes: {
               name: 'The Layernetes Team',
               url: 'https://www.learninglayer.ai/',

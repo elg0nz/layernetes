@@ -14,20 +14,20 @@ const FLOW_TEXT = [
 const postJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
-  headline: 'Introducing Layernetes: git push your AI agents',
+  headline: 'Most agents never leave the laptop. I built an on-prem cluster that gets yours live in a minute.',
   description:
-    "Standing up the infrastructure to host an AI agent takes weeks. Layernetes takes one command and about a minute: your agent goes live at a public URL, ready to share, demo, or hand to Claude. Here's how it works, and how to try it.",
+    "Building an agent got easy. Getting it off your laptop still costs a week of infrastructure. Layernetes turns that week into one command: your agent goes live at a public URL, on an on-prem cluster you can walk over and touch.",
   url: 'https://layernetes.wtp.io/blog/introducing-layernetes/',
   mainEntityOfPage: 'https://layernetes.wtp.io/blog/introducing-layernetes/',
   datePublished: '2026-07-06',
   image: 'https://layernetes.wtp.io/og.png',
-  author: { '@type': 'Organization', name: 'The Layernetes Team', url: 'https://www.learninglayer.ai/' },
+  author: { '@type': 'Person', name: 'Glo Maldonado', url: 'https://sanscourier.ai' },
   publisher: { '@type': 'Organization', name: 'Sanscourier.ai', url: 'https://sanscourier.ai' },
 });
 ---
 <Base
-  title="Introducing Layernetes: git push your AI agents"
-  description="Standing up the infrastructure to host an AI agent takes weeks. Layernetes takes one command and about a minute: your agent goes live at a public URL, ready to share, demo, or hand to Claude. Here's how it works, and how to try it."
+  title="Layernetes: ship an AI agent in a minute, not a week"
+  description="Building an agent got easy. Getting it off your laptop still costs a week of infrastructure. Layernetes turns that week into one command: your agent goes live at a public URL, on an on-prem cluster you can walk over and touch."
   accent="#7c9bff"
   accentRgb="124, 155, 255"
   page="blog-post"
@@ -35,7 +35,7 @@ const postJsonLd = JSON.stringify({
 >
   <Fragment slot="head">
     <meta property="article:published_time" content="2026-07-06" />
-    <meta property="article:author" content="https://www.learninglayer.ai/" />
+    <meta property="article:author" content="https://sanscourier.ai" />
     <script type="application/ld+json" set:html={postJsonLd} />
   </Fragment>
 
@@ -46,13 +46,13 @@ const postJsonLd = JSON.stringify({
       <span class="ll-badge">Announcement</span>
       <span class="ll-meta-dim">Jul 6, 2026</span>
       <span class="ll-meta-sep">·</span>
-      <a href="https://www.learninglayer.ai/" class="ll-meta-mid">The Layernetes Team</a>
+      <a href="https://sanscourier.ai" class="ll-meta-mid">Glo Maldonado</a>
       <span class="ll-meta-sep">·</span>
       <span class="ll-meta-dim">6 min read</span>
     </div>
 
     <h1 class="ll-article-title">
-      Introducing Layernetes: <span class="ll-featured-mono">git&nbsp;push</span> your AI agents
+      Most agents never leave the laptop. I built an <span class="ll-featured-mono">on&#8209;prem&nbsp;cluster</span> that gets yours live in a minute.
     </h1>
   </header>
 
@@ -62,41 +62,41 @@ const postJsonLd = JSON.stringify({
       <div class="ll-toc-list">
         <a href="#s0" class="ll-toc-link">00 · One command for Claude Code</a>
         <a href="#s1" class="ll-toc-link">01 · From an idea to a link you can share</a>
-        <a href="#s2" class="ll-toc-link">02 · What a live agent gets you</a>
-        <a href="#s3" class="ll-toc-link">03 · What happens when you push</a>
+        <a href="#s2" class="ll-toc-link">02 · What you actually get</a>
+        <a href="#s3" class="ll-toc-link">03 · The week, compressed</a>
         <a href="#s4" class="ll-toc-link">04 · Try it</a>
       </div>
     </nav>
   </div>
 
   <article class="ll-article" data-screen-label="Article">
-    <p>You built an agent. It works. It runs on your laptop, which is exactly where no one else can use it.</p>
+    <p>You built an agent this week. It works. And the only person on earth who can use it is you, because it lives in a terminal on your laptop.</p>
 
-    <p>That's the wall everyone hits. Building the agent got easy; your coding assistant does most of the typing now. Getting it in front of anyone else is the part that still eats your calendar. Do it yourself and you're wiring up a container, a server, secrets that can't live in your repo, a domain, and TLS, then gluing it all together. Call it a week if you know exactly what you're doing. A month if you're learning it as you go. And you get to do it again for the next agent.</p>
+    <p>I've spent decades building software used by millions of people. So I can tell you with some authority which part of shipping an agent is the hard part now. It isn't the agent. Your coding assistant writes most of that in an afternoon.</p>
 
-    <p>Layernetes collapses all of that into one command. You write your agent, run it, and about a minute later it's live on the internet at its own address.</p>
+    <p>The hard part is the week after: the container, the server, the secrets that can't live in the repo, the domain, the TLS, and the glue between them. A week if you've done it before. A month if you're learning as you go. Then the next agent shows up and you pay it all again.</p>
+
+    <p>That week is where most agents quietly die. Not from a bug, from a tax. It annoyed me enough, watching it happen on Learning Layer's AI floor, that I built the thing that deletes it.</p>
 
     <div class="ll-inline-cmd">
       <span class="tk-dim">$</span><span class="tk-fg">llnate</span><span class="tk-green">push</span>
     </div>
 
-    <p><code>push</code> prints a public URL. Send it to a friend, drop it in a channel, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.</p>
-
-    <p class="ll-lede">Weeks of infrastructure, or one command. That's the whole pitch.</p>
+    <p>About a minute later your agent is live on the internet at its own address. Send it to a friend, put it on screen at demo night, or hand it to Claude. Whoever opens it is talking to your agent.</p>
 
     <h2 id="s0" class="ll-h2"><span class="ll-h2-num">00</span>One command for Claude Code</h2>
 
-    <p>If you're using Claude Code, the shortest path into Layernetes is also one command:</p>
+    <p>If you build in Claude Code, the way in is also one line:</p>
 
     <div class="ll-inline-cmd">
       <span class="tk-dim">$</span><span class="tk-fg">claude</span><span class="tk-green">-p</span> <span class="tk-accent">"fetch agents.wtp.io/setup and set llnate"</span>
     </div>
 
-    <p>That prompt tells Claude to fetch the setup instructions written for coding assistants and run the full setup loop with you. It installs <code>llnate</code>, scaffolds the project, wires in the coding hooks, gets you logged into the cloud, encrypts your keys, and ships the agent. If you're already inside Claude Code, start there.</p>
+    <p>That URL serves setup instructions written for a coding assistant to read, not for you. Claude fetches them and runs the whole loop: installs <code>llnate</code>, scaffolds your project, wires in the hooks, signs you in, encrypts your keys, and pushes. I wrote those docs agent-first on purpose. The first reader of your developer docs is now usually somebody's assistant, and a tool that hasn't noticed that is making its humans do the translation by hand.</p>
 
     <h2 id="s1" class="ll-h2"><span class="ll-h2-num">01</span>From an idea to a link you can share</h2>
 
-    <p>Here's the whole path, start to finish:</p>
+    <p>The full path, end to end:</p>
 
     <div class="ll-term" style="margin-top: 22px;">
       <div class="ll-term-bar">
@@ -112,7 +112,7 @@ const postJsonLd = JSON.stringify({
       <div class="ll-term-body"><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">init</span> <span class="tk-muted">my-agent</span>   <span class="tk-comment"># start a new agent project</span></div><div><span class="tk-dim">$ </span><span class="tk-fg">cd</span> <span class="tk-muted">my-agent</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">plugin install</span>   <span class="tk-comment"># bring your AI coding assistant into the loop</span></div><div><span class="tk-comment"># ... build your agent, the way you build everything now ...</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">login</span>   <span class="tk-comment"># sign in to the cloud</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-fg">keys</span>   <span class="tk-comment"># add your API keys, encrypted</span></div><div><span class="tk-dim">$ </span><span class="tk-accent">llnate</span> <span class="tk-green">push</span>   <span class="tk-comment"># ship it, get your URL</span></div></div>
     </div>
 
-    <p>You spend your time on the middle line, building the agent. Everything around it is one word each. Your agent needs API keys to do its job; <code>llnate keys</code> encrypts them so they're safe to keep in your project, and only your running agent can ever read them. You never paste a secret into a dashboard.</p>
+    <p>Your time goes to the middle line. Everything around it is one word, and every one of those words is hiding a chore I decided you should never do again. The one worth pausing on is <code>keys</code>. Your agent needs API keys to work, and those keys are the one thing you can never leak. <code>llnate keys</code> encrypts them so they can live safely in your project, readable by your running agent and nothing else. You never paste a secret into a dashboard.</p>
 
     <p>When <code>push</code> finishes, it hands you the link:</p>
 
@@ -123,41 +123,45 @@ const postJsonLd = JSON.stringify({
 
     <p>That link is real, public, and yours.</p>
 
-    <h2 id="s2" class="ll-h2"><span class="ll-h2-num">02</span>What a live agent gets you</h2>
+    <h2 id="s2" class="ll-h2"><span class="ll-h2-num">02</span>What you actually get</h2>
 
-    <p>A URL changes what your agent is. On your laptop it's a script only you can run. Live, it's something other people and other agents can reach.</p>
+    <p>A URL changes what your agent is. On your laptop it's a script with an audience of one. At a public address it's something people, and other agents, can reach. Every push gets you:</p>
 
     <div class="ll-list">
-      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Demo it.</b> Put the link on screen. No "let me just run it locally," no screen-share of your terminal. It works from anyone's phone.</span></div>
-      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Share it.</b> Send the URL to a collaborator and they're using your agent a second later. Nothing to install on their end.</span></div>
-      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Let Claude use it.</b> Point Claude, or any MCP client, at the URL and your agent shows up as a tool it can call. Your agent becomes something other agents reach for.</span></div>
-      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Version it by default.</b> Every push gives you a fresh URL named for the exact code you shipped, so you always know which one you handed out.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Hosting on the floor's own compute.</b> No cloud account to open, no card on file, no surprise bill at the end of the month.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>A public URL fingerprinted to the exact code you shipped</b>, so you always know which build is behind the link you handed out.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>Keys that only your running agent can read</b>, decrypted in memory the instant it starts. Not in a file, not in a dashboard, not readable from a terminal, including mine.</span></div>
+      <div class="ll-list-item"><span class="ll-list-arrow">›</span><span><b>One address that speaks both plain HTTP and MCP.</b> A browser, a teammate, and Claude all reach the same agent the same way, and your agent becomes a tool other agents can call.</span></div>
     </div>
 
-    <h2 id="s3" class="ll-h2"><span class="ll-h2-num">03</span>What happens when you push</h2>
+    <p>Demo it from anyone's phone. Share it with nothing to install on their end. Hand it to Claude as a tool it reaches for.</p>
 
-    <p><code>llnate push</code> feels like sending code to GitHub. On the other side, something picks it up and does that week of work for you, in order: it packages your agent, gives it its own address on the internet, unlocks your encrypted keys, and switches it on. Each agent lands in its own sealed space, so yours and everyone else's never touch. From that one address it answers over both plain HTTP and MCP, which is why a browser, a teammate, and Claude can all reach it the same way.</p>
+    <h2 id="s3" class="ll-h2"><span class="ll-h2-num">03</span>The week, compressed</h2>
 
-    <p>Two details are worth a double-take. Your API keys are unlocked only in memory, at the instant your agent starts, so nothing else can read them: not a file, not a dashboard, not you with a terminal open. And the URL you get back is a fingerprint of the exact code you shipped, so every version has its own unambiguous address.</p>
+    <p><code>llnate push</code> feels like pushing code to GitHub. On the far side, the platform runs the week you skipped, in order: it packages your agent, gives it an address and TLS, unlocks your keys in memory, seals it into its own space so your agent and your neighbor's never touch, and switches it on.</p>
+
+    <p>I built each of those steps so you would never see them. That's the whole theory: a step I do once is a step a hundred builders on this floor never do again. The commands you don't type are the product.</p>
 
     <div class="ll-callout">
       <div class="ll-callout-glow"></div>
       <div class="ll-callout-eyebrow">// our own cloud, literally</div>
-      <p class="ll-callout-body">Here's the part that stops people mid-sentence: none of this runs on a hyperscaler. Your agent goes live on a rack of Dell OptiPlex machines in the 10th Floor Annex. Actual hardware, humming a few floors up, that you can walk over and put your hand on. When we say <i>our own cloud</i>, we mean the literal rack. You can come visit it.</p>
+      <p class="ll-callout-body">None of this runs on an overpriced provider. Your agent goes live on our on-prem cluster: a rack of Dell OptiPlex machines in the 10th Floor Annex, real hardware a few floors up that you can walk over and put your hand on. Learning Layer's floor is built on three pillars, Build, Community, and Compute. Layernetes is what turns that Compute pillar into something you reach with one command. Running our own metal in 2026 is a choice, not a compromise: the floor owns its capacity, and it owns its bill.</p>
     </div>
 
-    <p>That's the shape of it. How it actually pulls this off is the genuinely interesting part, and it's all open to read in the <a href="https://github.com/elg0nz/layernetes">repo</a>. You never have to touch any of it, and that's the point: the machinery is ours to run, the one command is yours.</p>
+    <p>Every line of how it works is open in the <a href="https://github.com/elg0nz/layernetes">repo</a>. You never have to read it, and that's the point: the machinery is mine to run, the command is yours.</p>
 
     <h2 id="s4" class="ll-h2"><span class="ll-h2-num">04</span>Try it</h2>
 
-    <p>Layernetes is built by <a href="https://sanscourier.ai">Sanscourier.ai</a> for members of <a href="https://www.learninglayer.ai/">Learning Layer</a>'s AI floor. For now, it's members only. If you want to ship agents this way:</p>
+    <p>Layernetes is built by <a href="https://sanscourier.ai">Sanscourier.ai</a> for members of <a href="https://www.learninglayer.ai/">Learning Layer</a>'s AI floor at <a href="https://frontiertower.io">Frontier Tower</a>. For now it's members only. If you're not in the building, it isn't for you yet. If you are:</p>
 
     <div class="ll-steps">
       <div class="ll-step"><span class="ll-step-num">1</span><span class="ll-step-body">Become a member at <a href="https://frontiertower.io">Frontier Tower</a> and join the AI floor.</span></div>
-      <div class="ll-step"><span class="ll-step-num">2</span><span class="ll-step-body">Email <a href="mailto:business@sanscourier.ai">business@sanscourier.ai</a> for access.</span></div>
+      <div class="ll-step"><span class="ll-step-num">2</span><span class="ll-step-body">Email me at <a href="mailto:business@sanscourier.ai">business@sanscourier.ai</a> and you get access.</span></div>
     </div>
 
-    <p>Then run the Claude Code command above, and your agent is live. Come build with us, and come see the rack it runs on.</p>
+    <p>Then run the Claude Code one-liner above. About a minute later your agent has a public URL, and a rack upstairs with your code running on it.</p>
+
+    <p>Come ship an agent, and come see the rack. And if you want the long version of how one command does a week of work, find me on the floor. I like telling that story.</p>
 
     <div class="ll-article-end">
       <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
