@@ -32,7 +32,15 @@ jobs:
           cache: npm
           cache-dependency-path: site/package-lock.json
       - run: npm ci
+      # PostHog is inlined at build time: Astro bakes PUBLIC_* env vars into the
+      # client bundle during `npm run build`, so they must be present here (the
+      # wrangler step below only uploads the already-built dist/). The project
+      # token is a public, write-only key — it ships to every browser anyway —
+      # so a repo variable is fine; the host defaults to US Cloud if unset.
       - run: npm run build
+        env:
+          PUBLIC_POSTHOG_PROJECT_TOKEN: ${{ vars.PUBLIC_POSTHOG_PROJECT_TOKEN }}
+          PUBLIC_POSTHOG_HOST: ${{ vars.PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com' }}
 
       # Deploy only on push to main. Requires two repo secrets:
       #   CLOUDFLARE_API_TOKEN   — token with the "Cloudflare Pages: Edit" permission
