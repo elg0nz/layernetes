@@ -164,8 +164,14 @@ const postJsonLd = JSON.stringify({
     <p>Come ship an agent, and come see the rack. And if you want the long version of how one command does a week of work, find me on the floor. I like telling that story.</p>
 
     <div class="ll-article-end">
-      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm" id="article-end-cta">Ship your first agent <span class="ll-mono">→</span></a>
       <a href="/blog/" class="ll-back-link" style="font-size: 13.5px;">← Back to the blog</a>
     </div>
   </article>
+
+  <script is:inline>
+    document.getElementById('article-end-cta')?.addEventListener('click', function() {
+      window.posthog?.capture('blog_article_end_cta_clicked', { post: 'introducing-layernetes' });
+    });
+  </script>
 </Base>

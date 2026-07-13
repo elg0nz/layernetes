@@ -23,7 +23,16 @@ const blogActive = !isHome;
     <a href={featuresHref} class="ll-nav-link">Features</a>
     <a href="/overview/" class="ll-nav-link">Docs</a>
     <a href={blogHref} class:list={['ll-nav-link', { 'is-active': blogActive }]}>Blog</a>
-    <a href="https://github.com/elg0nz/layernetes" class="ll-nav-link">GitHub</a>
-    <a href="/blog/introducing-layernetes/#try-it" class="ll-nav-cta">Ship an agent</a>
+    <a href="https://github.com/elg0nz/layernetes" class="ll-nav-link" id="nav-github-link">GitHub</a>
+    <a href="/blog/introducing-layernetes/#try-it" class="ll-nav-cta" id="nav-ship-cta">Ship an agent</a>
   </div>
 </nav>
+
+<script is:inline>
+  document.getElementById('nav-github-link')?.addEventListener('click', function() {
+    window.posthog?.capture('github_link_clicked', { location: 'nav' });
+  });
+  document.getElementById('nav-ship-cta')?.addEventListener('click', function() {
+    window.posthog?.capture('cta_ship_agent_clicked', { location: 'nav' });
+  });
+</script>

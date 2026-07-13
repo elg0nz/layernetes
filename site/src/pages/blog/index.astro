@@ -16,7 +16,7 @@ import Base from '../../layouts/Base.astro';
 
   <section class="ll-featured" data-screen-label="Featured">
     <div class="ll-featured-eyebrow">// latest</div>
-    <a href="/blog/introducing-layernetes/" class="ll-featured-card" data-screen-label="Featured post">
+    <a href="/blog/introducing-layernetes/" class="ll-featured-card" data-screen-label="Featured post" id="blog-featured-card">
       <div class="ll-featured-glow"></div>
       <div class="ll-featured-inner">
         <div class="ll-meta">
@@ -53,7 +53,7 @@ import Base from '../../layouts/Base.astro';
     <div>
       <div class="ll-archive-month">July 2026</div>
 
-      <a href="/blog/introducing-layernetes/" class="ll-archive-row">
+      <a href="/blog/introducing-layernetes/" class="ll-archive-row" id="blog-archive-row">
         <span class="ll-archive-date">Jul 06</span>
         <span class="ll-archive-main">
           <span class="ll-archive-title">Ship an AI agent in a minute, not a week</span>
@@ -75,9 +75,24 @@ import Base from '../../layouts/Base.astro';
         <p class="ll-subscribe-body">Follow along as we ship. Subscribe over RSS, or watch the repo on GitHub.</p>
       </div>
       <div class="ll-subscribe-actions">
-        <a href="/blog/rss.xml" class="ll-btn ll-btn-sm">Subscribe via RSS <span class="ll-mono">→</span></a>
-        <a href="https://github.com/elg0nz/layernetes" class="ll-btn-outline">GitHub</a>
+        <a href="/blog/rss.xml" class="ll-btn ll-btn-sm" id="blog-rss-btn">Subscribe via RSS <span class="ll-mono">→</span></a>
+        <a href="https://github.com/elg0nz/layernetes" class="ll-btn-outline" id="blog-github-link">GitHub</a>
       </div>
     </div>
   </section>
+
+  <script is:inline>
+    document.getElementById('blog-featured-card')?.addEventListener('click', function() {
+      window.posthog?.capture('blog_post_clicked', { post: 'introducing-layernetes', location: 'featured' });
+    });
+    document.getElementById('blog-archive-row')?.addEventListener('click', function() {
+      window.posthog?.capture('blog_post_clicked', { post: 'introducing-layernetes', location: 'archive' });
+    });
+    document.getElementById('blog-rss-btn')?.addEventListener('click', function() {
+      window.posthog?.capture('rss_subscribe_clicked');
+    });
+    document.getElementById('blog-github-link')?.addEventListener('click', function() {
+      window.posthog?.capture('github_link_clicked', { location: 'blog_subscribe' });
+    });
+  </script>
 </Base>

@@ -84,7 +84,7 @@ const howToJsonLd = JSON.stringify({
     </p>
 
     <div class="ll-hero-actions">
-      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn">
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-btn" id="hero-ship-cta">
         Ship your first agent
         <span class="ll-mono">→</span>
       </a>
@@ -208,12 +208,12 @@ const howToJsonLd = JSON.stringify({
   <section class="ll-learn" data-screen-label="Learn">
     <div class="ll-feature-eyebrow" style="margin-bottom: 22px;">// go deeper</div>
     <div class="ll-learn-grid">
-      <a href="/blog/introducing-layernetes/" class="ll-learn-card">
+      <a href="/blog/introducing-layernetes/" class="ll-learn-card" id="learn-intro-card">
         <h3 class="ll-learn-title">Meet Layernetes</h3>
         <p class="ll-learn-body">See what Layernetes is, ship your first agent, and look under the hood.</p>
         <span class="ll-learn-link">Read the introduction →</span>
       </a>
-      <a href="/blog/introducing-layernetes/#try-it" class="ll-learn-card">
+      <a href="/blog/introducing-layernetes/#try-it" class="ll-learn-card" id="learn-access-card">
         <h3 class="ll-learn-title">Get access</h3>
         <p class="ll-learn-body">Layernetes is members-only for now. See how to join the cloud and start shipping.</p>
         <span class="ll-learn-link">How to get access →</span>
@@ -228,7 +228,7 @@ const howToJsonLd = JSON.stringify({
         <h2 class="ll-cta-title">Your agent works. Let someone call it.</h2>
         <p class="ll-cta-body">Push the code. Share the URL. Get it in front of the people, agents, and collaborators who can take it somewhere new.</p>
         <div class="ll-cta-actions">
-          <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm">Ship your first agent <span class="ll-mono">→</span></a>
+          <a href="/blog/introducing-layernetes/#try-it" class="ll-btn ll-btn-sm" id="cta-ship-btn">Ship your first agent <span class="ll-mono">→</span></a>
           <div class="ll-cta-cmd">
             <span class="tk-dim">$</span><span class="tk-fg">llnate</span><span class="tk-green">push</span>
             <button class="ll-cta-copy" aria-label="Copy command" type="button" data-copy="llnate push">
@@ -244,5 +244,20 @@ const howToJsonLd = JSON.stringify({
   <script>
     import { initCliSelector } from '../scripts/cli-selector.js';
     initCliSelector();
+  </script>
+
+  <script is:inline>
+    document.getElementById('hero-ship-cta')?.addEventListener('click', function() {
+      window.posthog?.capture('cta_ship_agent_clicked', { location: 'hero' });
+    });
+    document.getElementById('learn-access-card')?.addEventListener('click', function() {
+      window.posthog?.capture('get_access_clicked', { location: 'learn_section' });
+    });
+    document.getElementById('learn-intro-card')?.addEventListener('click', function() {
+      window.posthog?.capture('blog_post_clicked', { post: 'introducing-layernetes', location: 'learn_section' });
+    });
+    document.getElementById('cta-ship-btn')?.addEventListener('click', function() {
+      window.posthog?.capture('cta_ship_agent_clicked', { location: 'cta_section' });
+    });
   </script>
 </Base>

@@ -35,7 +35,10 @@ export function initCliSelector() {
   menu.querySelectorAll('.ll-cli-item').forEach((item) => {
     item.addEventListener('click', () => {
       const t = CLI_TOOLS.find((x) => x.id === item.dataset.toolId);
-      if (t) render(t);
+      if (t) {
+        render(t);
+        window.posthog?.capture('cli_tool_selected', { tool_id: t.id, tool_label: t.label });
+      }
       menu.classList.remove('is-open');
     });
   });

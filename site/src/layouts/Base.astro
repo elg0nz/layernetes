@@ -1,6 +1,7 @@
 ---
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import PostHog from '../components/posthog.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -106,6 +107,7 @@ const glowStyle = `top:${v.glowTop}; width:${v.glowWidth}; height:${v.glowHeight
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <slot name="head" />
+  <PostHog />
 </head>
 <body>
   <div class="ll-root" style={rootStyle}>

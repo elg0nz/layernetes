@@ -9,6 +9,7 @@ export function initCopyButtons(root = document) {
       const text = btn.getAttribute('data-copy') || '';
       try {
         if (navigator.clipboard) await navigator.clipboard.writeText(text);
+        window.posthog?.capture('command_copied', { snippet: text.slice(0, 120) });
       } catch (e) {
         // clipboard permissions denied — nothing actionable to do here
       }
