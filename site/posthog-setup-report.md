@@ -1,5 +1,10 @@
 # PostHog post-wizard report
 
+> **Note:** The site now reports to PostHog **project 510881**. This report was
+> generated against the wizard's original project (231006), so the dashboard and
+> insight links below live in 231006 — recreate them in 510881 if you want them
+> against live data.
+
 The wizard has completed a full PostHog analytics integration for the Layernetes marketing site. A new `src/components/posthog.astro` component was created using the PostHog JS snippet with the `is:inline` directive, and it was imported into `src/layouts/Base.astro` so it loads on every page. Environment variables were written to `.env` and referenced in the component. Eight custom events were instrumented across the hero CTA, CLI tool selector, copy buttons, nav links, blog index, and the intro blog post — covering the key conversion and engagement signals for the site.
 
 | Event name | Description | File |
